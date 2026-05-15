@@ -1,0 +1,181 @@
+<!-- Results -->
+<section class="results-section" id="results">
+  <div class="container">
+
+    <div class="section-header">
+      <span class="section-label">On The Podium</span>
+      <h2 class="section-title" style="color:var(--white);">Regatta Results</h2>
+      <p class="section-subtitle" style="color:rgba(255,255,255,0.6);">Select a regatta to view the full results by category.</p>
+    </div>
+
+    <!-- Year tabs -->
+    <div class="res-year-tabs" id="res-year-tabs">
+      <button class="res-year-btn active" data-year="2025">2025</button>
+      <button class="res-year-btn" data-year="2024">2024</button>
+    </div>
+
+    <!-- Year panels rendered by JS below -->
+    <div id="res-year-panels"></div>
+
+  </div>
+</section>
+
+<script>
+/* ─────────────────────────────────────────────
+   RESULTS DATA
+   To add real results, fill in the arrays:
+   [gold_club, silver_club, bronze_club]
+   Leave an empty object {} for TBD / not yet run.
+   Example entry:
+     stmichaels: {
+       "Under 12s": ["Skerries RC", "Bray RC", "Wicklow RC"],
+       "Senior Mens": ["Dalkey RC", "Fingal RC", ""],
+     }
+───────────────────────────────────────────── */
+const ECRC_RESULTS = {
+  2025: {
+    regattas: [
+      { id: "stmichaels", short: "St. Michael's", date: "17 May", logo: "Clubs Logo/SMRC.jpg",             name: "St. Michael's RC" },
+      { id: "dalkey",     short: "Dalkey",         date: "30 May", logo: "Clubs Logo/Dalkey RC.jpg",        name: "Dalkey RC" },
+      { id: "skerries",   short: "Skerries",        date: "6 Jun",  logo: "Clubs Logo/Skerries RC.png",     name: "Skerries RC" },
+      { id: "stella",     short: "Stella Maris",    date: "21 Jun", logo: "Clubs Logo/Stella Maris RC.jpg", name: "Stella Maris RC" },
+      { id: "bray",       short: "Bray",            date: "27 Jun", logo: "Clubs Logo/Bray RC.jpg",         name: "Bray RC" },
+      { id: "stpats",     short: "St. Patricks",    date: "4 Jul",  logo: "Clubs Logo/St Pats RC.jpg",      name: "St. Patricks RC" },
+      { id: "fingal",     short: "Fingal",           date: "18 Jul", logo: "Clubs Logo/Fingal RC.jpg",       name: "Fingal RC" },
+      { id: "greystones", short: "Greystones",       date: "25 Jul", logo: "Clubs Logo/Greystones Tc.jpg",   name: "Greystones RC" },
+      { id: "wicklow",    short: "Wicklow",          date: "3 Aug",  logo: "Clubs Logo/Wicklow RC.jpg",      name: "Wicklow RC" },
+    ],
+    results: {
+      stmichaels: {},
+      dalkey:     {},
+      skerries:   {},
+      stella:     {},
+      bray:       {},
+      stpats:     {},
+      fingal:     {},
+      greystones: {},
+      wicklow:    {},
+    }
+  },
+  2024: { regattas: [], results: {} }
+};
+
+const CATEGORIES = [
+  "Under 12s",
+  "Under 14 Boys",
+  "Under 14 Girls",
+  "Under 16 Boys",
+  "Under 16 Girls",
+  "Under 18 Boys",
+  "Under 18 Girls",
+  "Under 21 Mens",
+  "Under 21 Womens",
+  "Mixed",
+  "Novice Men's",
+  "Novice Women's",
+  "Intermediate Mens",
+  "Intermediate Women's",
+  "Junior Mens",
+  "Junior Womens",
+  "Senior Mens",
+  "Senior Women's",
+  "Masters Mens",
+  "Masters Womens",
+];
+
+function medalCell(val, cls) {
+  return val ? `<td class="${cls}"><span class="medal-name">${val}</span></td>`
+             : `<td class="medal-pending">—</td>`;
+}
+
+function buildPanel(regatta, yearResults) {
+  const data = yearResults[regatta.id] || {};
+  const rows = CATEGORIES.map(cat => {
+    const m = data[cat] || [];
+    return `<tr>
+      <td class="res-cat">${cat}</td>
+      ${medalCell(m[0], 'medal-gold')}
+      ${medalCell(m[1], 'medal-silver')}
+      ${medalCell(m[2], 'medal-bronze')}
+    </tr>`;
+  }).join('');
+
+  return `<div class="regatta-panel" id="panel-${regatta.id}">
+    <div class="results-wrap">
+      <div class="res-panel-header">
+        <div class="res-panel-logo-wrap">
+          <img src="${regatta.logo}" alt="${regatta.name}" />
+        </div>
+        <div class="res-panel-info">
+          <h3>${regatta.name} Regatta</h3>
+          <span>${regatta.date} &middot; 2025 Season</span>
+        </div>
+      </div>
+      <div class="res-table-wrap">
+        <table class="medal-table">
+          <thead>
+            <tr>
+              <th class="th-cat">Category</th>
+              <th class="th-gold">&#127941;&nbsp; Gold</th>
+              <th class="th-silver">&#9679;&nbsp; Silver</th>
+              <th class="th-bronze">&#9679;&nbsp; Bronze</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildYearPanel(year) {
+  const yd = ECRC_RESULTS[year];
+  if (!yd || !yd.regattas.length) {
+    return `<div class="year-panel" data-year="${year}">
+      <div class="res-empty"><p>No results available for ${year}.</p></div>
+    </div>`;
+  }
+
+  const tabs = yd.regattas.map((r, i) => `
+    <button class="regatta-tab-btn${i === 0 ? ' active' : ''}" data-panel="${r.id}" data-year="${year}" onclick="switchRegatta('${year}','${r.id}',this)">
+      <div class="regatta-tab-logo"><img src="${r.logo}" alt="${r.name}" /></div>
+      <span class="regatta-tab-name">${r.short}</span>
+      <span class="regatta-tab-date">${r.date}</span>
+    </button>`).join('');
+
+  const panels = yd.regattas.map((r, i) => {
+    const html = buildPanel(r, yd.results);
+    return i === 0 ? html.replace('class="regatta-panel"', 'class="regatta-panel active"') : html;
+  }).join('');
+
+  return `<div class="year-panel" data-year="${year}">
+    <div class="regatta-tabs-wrap">
+      <div class="regatta-tabs" id="rtabs-${year}">${tabs}</div>
+    </div>
+    <div id="rpanels-${year}">${panels}</div>
+  </div>`;
+}
+
+function switchYear(year) {
+  document.querySelectorAll('.res-year-btn').forEach(b => b.classList.toggle('active', b.dataset.year == year));
+  document.querySelectorAll('#res-year-panels .year-panel').forEach(p => p.classList.toggle('active', p.dataset.year == year));
+}
+
+function switchRegatta(year, id, btn) {
+  document.getElementById('rtabs-' + year).querySelectorAll('.regatta-tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+  document.getElementById('rpanels-' + year).querySelectorAll('.regatta-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
+}
+
+(function init() {
+  const YEAR_ORDER = ['2025', '2024'];
+  const container = document.getElementById('res-year-panels');
+  container.innerHTML = YEAR_ORDER.map(y => buildYearPanel(y)).join('');
+  // default: activate current year
+  const defaultYear = '2025';
+  document.querySelector(`.year-panel[data-year="${defaultYear}"]`).classList.add('active');
+
+  document.getElementById('res-year-tabs').querySelectorAll('.res-year-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchYear(btn.dataset.year));
+  });
+})();
+</script>

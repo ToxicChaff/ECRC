@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In — East Coast Rowing Council</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="container">
+      <span>&#9990; eastcoastrowingireland@gmail.com</span>
+      <span class="top-bar-right">
+        <a href="#">Member Portal</a> &nbsp;|&nbsp;
+        <a href="#">Volunteer</a> &nbsp;|&nbsp;
+        <a href="#">Newsletter</a>
+      </span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="index.html" class="nav-logo">
+        <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC Logo" />
+        <span class="nav-logo-text">East Coast Rowing Council</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#news">News</a></li>
+        <li><a href="index.html#events">Events</a></li>
+        <li><a href="index.html#results">Results</a></li>
+        <li><a href="index.html#clubs">Clubs</a></li>
+        <li><a href="rulebook.html">Rulebook</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li class="nav-divider"></li>
+      </ul>
+      <div class="nav-cta">
+        <a href="login.html" class="btn-login">Log In</a>
+      </div>
+      <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="mobile-menu" id="mobile-menu">
+      <a href="index.html">Home</a>
+      <a href="index.html#news">News</a>
+      <a href="index.html#events">Events</a>
+      <a href="index.html#results">Results</a>
+      <a href="index.html#clubs">Clubs</a>
+      <a href="rulebook.html">Rulebook</a>
+      <a href="about.html">About Us</a>
+      <a href="login.html" class="btn-login">Log In</a>
+    </div>
+  </nav>
+
+  <!-- Login section -->
+  <div class="login-section">
+    <div class="container">
+      <div class="login-card">
+        <div style="text-align:center;margin-bottom:24px;">
+          <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC" style="height:56px;border-radius:6px;margin:0 auto 12px;" />
+        </div>
+        <h2>Member Login</h2>
+        <p class="login-sub">Sign in to access the ECRC member portal, event registration, and results management.</p>
+
+        <form>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="you@yourclub.org" autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label for="password">
+              Password
+              <a href="#" class="form-forgot">Forgot password?</a>
+            </label>
+            <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+          </div>
+          <button type="submit" class="btn-login-submit">Sign In</button>
+        </form>
+
+        <div class="login-divider">or</div>
+
+        <p class="login-register">
+          Not a member yet? <a href="#">Register your club</a> to get access.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="gold-line"></div>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC Logo" />
+            <span class="footer-logo-text">East Coast Rowing Council</span>
+          </div>
+          <p>The governing body for coastal rowing on the East Coast of Ireland, covering counties Dublin, Wicklow, and North Wexford. Affiliated to the Irish Coastal Rowing Federation.</p>
+          <div class="social-links">
+            <a href="https://www.facebook.com/EastCoastRowingCouncil" class="social-link" title="Facebook" target="_blank" rel="noopener">f</a>
+            <a href="#" class="social-link" title="X / Twitter">&#120143;</a>
+            <a href="https://www.instagram.com/east.coastrowing/" class="social-link" title="Instagram" target="_blank" rel="noopener">&#9749;</a>
+            <a href="#" class="social-link" title="YouTube">&#9654;</a>
+            <a href="#" class="social-link" title="LinkedIn">in</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#news">News</a></li>
+            <li><a href="index.html#events">Events</a></li>
+            <li><a href="index.html#results">Results</a></li>
+            <li><a href="index.html#clubs">Clubs</a></li>
+            <li><a href="rulebook.html">Rulebook</a></li>
+            <li><a href="about.html">About Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Member Portal</a></li>
+            <li><a href="#">Event Registration</a></li>
+            <li><a href="#">Results Archive</a></li>
+            <li><a href="#">Coaching Licences</a></li>
+            <li><a href="#">Volunteer</a></li>
+            <li><a href="#">Newsletter</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:eastcoastrowingireland@gmail.com">eastcoastrowingireland@gmail.com</a></li>
+            <li><a href="privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Use</a></li>
+            <li><a href="safeguarding.html">Safeguarding Policy</a></li>
+            <li><a href="#">Media Enquiries</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="gold-line"></div>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2025 East Coast Rowing Council. All rights reserved.</p>
+        <div class="footer-bottom-links">
+          <a href="privacy-policy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Use</a>
+          <a href="safeguarding.html">Safeguarding</a>
+          <a href="mailto:eastcoastrowingireland@gmail.com">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      document.getElementById('mobile-menu').classList.toggle('open');
+    }
+    document.querySelectorAll('.mobile-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.remove('open');
+      });
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>East Coast Rowing Council</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Facebook Page Plugin SDK -->
+  <div id="fb-root"></div>
+  <script async defer crossorigin="anonymous"
+    src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v20.0">
+  </script>
+
+  <!-- ── nav ── -->
+
+<!-- Top bar -->
+<div class="top-bar">
+  <div class="container">
+    <span>&#9990; eastcoastrowingireland@gmail.com</span>
+    <span class="top-bar-right">
+      <a href="#">Member Portal</a> &nbsp;|&nbsp;
+      <a href="#">Volunteer</a> &nbsp;|&nbsp;
+      <a href="#">Newsletter</a>
+    </span>
+  </div>
+</div>
+
+<!-- Navigation -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-logo">
+      <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC Logo" />
+      <span class="nav-logo-text">East Coast Rowing Council</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="index.html#news">News</a></li>
+      <li><a href="index.html#events">Events</a></li>
+      <li><a href="index.html#results">Results</a></li>
+      <li><a href="index.html#clubs">Clubs</a></li>
+      <li><a href="rulebook.html">Rulebook</a></li>
+      <li><a href="about.html">About Us</a></li>
+      <li class="nav-divider"></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="login.html" class="btn-login">Log In</a>
+    </div>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html">Home</a>
+    <a href="index.html#news">News</a>
+    <a href="index.html#events">Events</a>
+    <a href="index.html#results">Results</a>
+    <a href="index.html#clubs">Clubs</a>
+    <a href="rulebook.html">Rulebook</a>
+    <a href="about.html">About Us</a>
+    <a href="login.html" class="btn-login">Log In</a>
+  </div>
+</nav>
+
+  <!-- ── hero ── -->
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge">2025–2026 Season Now Open</div>
+      <h1>Welcome to the<br /><span>East Coast</span><br />Rowing Council</h1>
+      <p>The governing body for coastal rowing on the East Coast of Ireland — connecting clubs, athletes, and officials across Dublin, Wicklow, and North Wexford.</p>
+      <div class="hero-actions">
+        <a href="#events" class="btn btn-primary">Find Out More</a>
+        <a href="#clubs" class="btn btn-outline-white">View Member Clubs</a>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <svg width="16" height="24" viewBox="0 0 16 24" fill="none">
+      <rect x="1" y="1" width="14" height="22" rx="7" stroke="white" stroke-width="1.5"/>
+      <circle cx="8" cy="7" r="2" fill="white"/>
+    </svg>
+    Scroll
+  </div>
+</section>
+
+  <!-- ── news ── -->
+
+<!-- News / Social Feed -->
+<section class="social-section" id="news">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Stay Connected</span>
+      <h2 class="section-title">News &amp; Social Media</h2>
+      <p class="section-subtitle">Follow the East Coast Rowing Council on Facebook and Instagram for the latest news, event photos, and announcements — straight from our feeds.</p>
+    </div>
+    <div class="social-layout">
+
+      <!-- ── Facebook column ── -->
+      <div class="social-col">
+        <div class="social-col-header">
+          <div class="social-platform-icon fb">f</div>
+          <div class="social-col-header-text">
+            <h3>East Coast Rowing Council</h3>
+            <span>facebook.com/EastCoastRowingCouncil</span>
+          </div>
+        </div>
+        <div class="fb-embed-wrap">
+          <div class="fb-page"
+            data-href="https://www.facebook.com/EastCoastRowingCouncil"
+            data-tabs="timeline"
+            data-width="600"
+            data-height="650"
+            data-small-header="false"
+            data-adapt-container-width="true"
+            data-hide-cover="false"
+            data-show-facepile="false">
+            <blockquote cite="https://www.facebook.com/EastCoastRowingCouncil" class="fb-xfbml-parse-ignore">
+              <a href="https://www.facebook.com/EastCoastRowingCouncil">East Coast Rowing Council on Facebook</a>
+            </blockquote>
+          </div>
+        </div>
+        <a href="https://www.facebook.com/EastCoastRowingCouncil"
+          target="_blank" rel="noopener noreferrer"
+          class="social-follow-link">
+          &#128077; Visit our Facebook Page &#8594;
+        </a>
+      </div>
+
+      <!-- ── Instagram column ── -->
+      <div class="social-col">
+        <div class="social-col-header">
+          <div class="social-platform-icon ig">&#9749;</div>
+          <div class="social-col-header-text">
+            <h3>@east.coastrowing</h3>
+            <span>instagram.com/east.coastrowing</span>
+          </div>
+        </div>
+        <div class="ig-posts">
+
+          <!--
+            HOW TO ADD INSTAGRAM POST EMBEDS:
+            1. Go to any post on instagram.com/east.coastrowing
+            2. Click the three-dot menu (···) on the post
+            3. Select "Embed" → copy the <blockquote> code shown
+            4. Paste it here replacing a placeholder <div class="ig-placeholder"> block
+            5. The embed.js script will render it automatically
+          -->
+
+          <!-- Post slot 1 — replace with your first Instagram embed code -->
+          <div class="ig-placeholder">
+            <div class="ig-placeholder-icon">&#9749;</div>
+            <h4>Instagram Post</h4>
+            <p>Paste an Instagram embed code here from<br /><code>@east.coastrowing</code></p>
+            <p style="font-size:0.72rem;color:var(--muted)">Post → ··· → Embed → Copy code</p>
+          </div>
+
+          <!-- Post slot 2 — replace with your second Instagram embed code -->
+          <div class="ig-placeholder">
+            <div class="ig-placeholder-icon">&#9749;</div>
+            <h4>Instagram Post</h4>
+            <p>Paste a second Instagram embed code here from<br /><code>@east.coastrowing</code></p>
+            <p style="font-size:0.72rem;color:var(--muted)">Post → ··· → Embed → Copy code</p>
+          </div>
+
+        </div>
+        <a href="https://www.instagram.com/east.coastrowing/"
+          target="_blank" rel="noopener noreferrer"
+          class="social-follow-link">
+          &#128247; Follow us on Instagram &#8594;
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Instagram embed renderer (one instance for whole page) -->
+<script async src="//www.instagram.com/embed.js"></script>
+
+  <!-- ── events ── -->
+
+<!-- Events -->
+<section class="events-section" id="events">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">On The Water</span>
+      <h2 class="section-title">2025 Regatta Calendar</h2>
+      <p class="section-subtitle">The full ECRC regatta schedule for 2025. All events hosted by member clubs along the East Coast of Ireland.</p>
+    </div>
+
+    <!-- May -->
+    <div class="cal-month">
+      <div class="cal-month-header">
+        <span class="cal-month-name">May</span>
+        <span class="cal-month-year">2025</span>
+        <span class="cal-month-count">2 events</span>
+      </div>
+      <div class="cal-grid">
+
+        <div class="cal-card">
+          <div class="cal-date-badge"><span class="cal-day">17</span><span class="cal-mon">May</span></div>
+          <div class="cal-logo">
+            <img src="Clubs Logo/SMRC.jpg" alt="St. Michael's RC" />
+          </div>
+          <div class="cal-details">
+            <h4>St. Michael's RC</h4>
+            <span class="cal-label">Host Club</span>
+          </div>
+          <a href="#" class="cal-map-btn" title="Get Directions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Get Directions
+          </a>
+        </div>
+
+        <div class="cal-card">
+          <div class="cal-date-badge"><span class="cal-day">30</span><span class="cal-mon">May</span></div>
+          <div class="cal-logo">
+            <img src="Clubs Logo/Dalkey RC.jpg" alt="Dalkey RC" />
+          </div>
+          <div class="cal-details">
+            <h4>Dalkey RC</h4>
+            <span class="cal-label">Host Club</span>
+          </div>
+          <a href="#" class="cal-map-btn" title="Get Directions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Get Directions
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- June -->
+    <div class="cal-month">
+      <div class="cal-month-header">
+        <span class="cal-month-name">June</span>
+        <span class="cal-month-year">2025</span>
+        <span class="cal-month-count">3 events</span>
+      </div>
+      <div class="cal-grid">
+
+        <div class="cal-card">
+          <div class="cal-date-badge"><span class="cal-day">6</span><span class="cal-mon">Jun</span></div>
+          <div class="cal-logo">
+            <img src="Clubs Logo/Skerries RC.png" alt="Skerries RC" />
+          </div>
+          <div class="cal-details">
+            <h4>Skerries RC</h4>
+            <span class="cal-label">Host Club</span>
+          </div>
+          <a href="#" class="cal-map-btn" title="Get Directions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Get Directions
+          </a>
+        </div>
+
+        <div class="cal-card">
+          <div class="cal-date-badge"><span class="cal-day">21</span><span class="cal-mon">Jun</span></div>
+          <div class="cal-logo">
+            <img src="Clubs Logo/Stella Maris RC.jpg" alt="Stella Maris RC" />
+          </div>
+          <div class="cal-details">
+            <h4>Stella Maris RC</h4>
+            <span class="cal-label">Host Club</span>
+          </div>
+          <a href="#" class="cal-map-btn" title="Get Directions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Get Directions
+          </a>
+        </div>
+
+        <div class="cal-card">
+          <div class="cal-date-badge"><span class="cal-day">27</span><span class="cal-mon">Jun</span></div>
+          <div class="cal-logo">
+            <img src="Clubs Logo/Bray RC.jpg" alt="Bray RC" />
+          </div>
+          <div class="cal-details">
+            <h4>Bray RC</h4>
+            <span class="cal-label">Host Club</span>
+          </div>
+          <a href="#" class="cal-map-btn" title="Get Directions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Get Directions
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- July -->
+    <div class="cal-month">
+      <div class="cal-month-header">
+        <span class="cal-month-name">July</span>
+        <span class="cal-month-year">2025</span>
+        <span class="cal-month-count">3 events</span>
+      </div>
+      <div class="cal-grid">
+
+        <div class="cal-card">
+          <div class="cal-date-badge"><span class="cal-day">4</span><span class="cal-mon">Jul</span></div>
+          <div class="cal-logo">
+            <img src="Clubs Logo/St Pats RC.jpg" alt="St. Patricks RC" />
+          </div>
+          <div class="cal-details">
+            <h4>St. Patricks RC</h4>
+            <span class="cal-label">Host Club</span>
+          </div>
+          <a href="#" class="cal-map-btn" title="Get Directions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Get Directions
+          </a>
+        </div>
+
+        <div class="cal-card">
+          <div class="cal-date-badge"><span class="cal-day">18</span><span class="cal-mon">Jul</span></div>
+          <div class="cal-logo">
+            <img src="Clubs Logo/Fingal RC.jpg" alt="Fingal RC" />
+          </div>
+          <div class="cal-details">
+            <h4>Fingal RC</h4>
+            <span class="cal-label">Host Club</span>
+          </div>
+          <a href="#" class="cal-map-btn" title="Get Directions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Get Directions
+          </a>
+        </div>
+
+        <div class="cal-card">
+          <div class="cal-date-badge"><span class="cal-day">25</span><span class="cal-mon">Jul</span></div>
+          <div class="cal-logo">
+            <img src="Clubs Logo/Greystones Tc.jpg" alt="Greystones RC" />
+          </div>
+          <div class="cal-details">
+            <h4>Greystones RC</h4>
+            <span class="cal-label">Host Club</span>
+          </div>
+          <a href="#" class="cal-map-btn" title="Get Directions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Get Directions
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- August -->
+    <div class="cal-month">
+      <div class="cal-month-header">
+        <span class="cal-month-name">August</span>
+        <span class="cal-month-year">2025</span>
+        <span class="cal-month-count">2 events</span>
+      </div>
+      <div class="cal-grid">
+
+        <div class="cal-card">
+          <div class="cal-date-badge"><span class="cal-day">3</span><span class="cal-mon">Aug</span></div>
+          <div class="cal-logo">
+            <img src="Clubs Logo/Wicklow RC.jpg" alt="Wicklow RC" />
+          </div>
+          <div class="cal-details">
+            <h4>Wicklow RC</h4>
+            <span class="cal-label">Host Club</span>
+          </div>
+          <a href="#" class="cal-map-btn" title="Get Directions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Get Directions
+          </a>
+        </div>
+
+        <!-- IFC Championship — featured card -->
+        <div class="cal-card cal-card-featured">
+          <div class="cal-featured-badge">Championship</div>
+          <div class="cal-date-badge cal-date-multi">
+            <span class="cal-day">15–17</span><span class="cal-mon">Aug</span>
+          </div>
+          <div class="cal-logo">
+            <img src="Brand_assets/ECRC-Logo.jpg" alt="ICRF Championship" />
+          </div>
+          <div class="cal-details">
+            <h4>ICRF Championship</h4>
+            <span class="cal-label">Irish Coastal Rowing Federation</span>
+          </div>
+          <a href="#" class="cal-map-btn" title="Get Directions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Get Directions
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+  <!-- ── results ── -->
+
+<!-- Results -->
+<section class="results-section" id="results">
+  <div class="container">
+
+    <div class="section-header">
+      <span class="section-label">On The Podium</span>
+      <h2 class="section-title" style="color:var(--white);">Regatta Results</h2>
+      <p class="section-subtitle" style="color:rgba(255,255,255,0.6);">Select a regatta to view the full results by category.</p>
+    </div>
+
+    <!-- Year tabs -->
+    <div class="res-year-tabs" id="res-year-tabs">
+      <button class="res-year-btn active" data-year="2025">2025</button>
+      <button class="res-year-btn" data-year="2024">2024</button>
+    </div>
+
+    <!-- Year panels rendered by JS below -->
+    <div id="res-year-panels"></div>
+
+  </div>
+</section>
+
+<script>
+/* ─────────────────────────────────────────────
+   RESULTS DATA
+   To add real results, fill in the arrays:
+   [gold_club, silver_club, bronze_club]
+   Leave an empty object {} for TBD / not yet run.
+   Example entry:
+     stmichaels: {
+       "Under 12s": ["Skerries RC", "Bray RC", "Wicklow RC"],
+       "Senior Mens": ["Dalkey RC", "Fingal RC", ""],
+     }
+───────────────────────────────────────────── */
+const ECRC_RESULTS = {
+  2025: {
+    regattas: [
+      { id: "stmichaels", short: "St. Michael's", date: "17 May", logo: "Clubs Logo/SMRC.jpg",             name: "St. Michael's RC" },
+      { id: "dalkey",     short: "Dalkey",         date: "30 May", logo: "Clubs Logo/Dalkey RC.jpg",        name: "Dalkey RC" },
+      { id: "skerries",   short: "Skerries",        date: "6 Jun",  logo: "Clubs Logo/Skerries RC.png",     name: "Skerries RC" },
+      { id: "stella",     short: "Stella Maris",    date: "21 Jun", logo: "Clubs Logo/Stella Maris RC.jpg", name: "Stella Maris RC" },
+      { id: "bray",       short: "Bray",            date: "27 Jun", logo: "Clubs Logo/Bray RC.jpg",         name: "Bray RC" },
+      { id: "stpats",     short: "St. Patricks",    date: "4 Jul",  logo: "Clubs Logo/St Pats RC.jpg",      name: "St. Patricks RC" },
+      { id: "fingal",     short: "Fingal",           date: "18 Jul", logo: "Clubs Logo/Fingal RC.jpg",       name: "Fingal RC" },
+      { id: "greystones", short: "Greystones",       date: "25 Jul", logo: "Clubs Logo/Greystones Tc.jpg",   name: "Greystones RC" },
+      { id: "wicklow",    short: "Wicklow",          date: "3 Aug",  logo: "Clubs Logo/Wicklow RC.jpg",      name: "Wicklow RC" },
+    ],
+    results: {
+      stmichaels: {},
+      dalkey:     {},
+      skerries:   {},
+      stella:     {},
+      bray:       {},
+      stpats:     {},
+      fingal:     {},
+      greystones: {},
+      wicklow:    {},
+    }
+  },
+  2024: { regattas: [], results: {} }
+};
+
+const CATEGORIES = [
+  "Under 12s",
+  "Under 14 Boys",
+  "Under 14 Girls",
+  "Under 16 Boys",
+  "Under 16 Girls",
+  "Under 18 Boys",
+  "Under 18 Girls",
+  "Under 21 Mens",
+  "Under 21 Womens",
+  "Mixed",
+  "Novice Men's",
+  "Novice Women's",
+  "Intermediate Mens",
+  "Intermediate Women's",
+  "Junior Mens",
+  "Junior Womens",
+  "Senior Mens",
+  "Senior Women's",
+  "Masters Mens",
+  "Masters Womens",
+];
+
+function medalCell(val, cls) {
+  return val ? `<td class="${cls}"><span class="medal-name">${val}</span></td>`
+             : `<td class="medal-pending">—</td>`;
+}
+
+function buildPanel(regatta, yearResults) {
+  const data = yearResults[regatta.id] || {};
+  const rows = CATEGORIES.map(cat => {
+    const m = data[cat] || [];
+    return `<tr>
+      <td class="res-cat">${cat}</td>
+      ${medalCell(m[0], 'medal-gold')}
+      ${medalCell(m[1], 'medal-silver')}
+      ${medalCell(m[2], 'medal-bronze')}
+    </tr>`;
+  }).join('');
+
+  return `<div class="regatta-panel" id="panel-${regatta.id}">
+    <div class="results-wrap">
+      <div class="res-panel-header">
+        <div class="res-panel-logo-wrap">
+          <img src="${regatta.logo}" alt="${regatta.name}" />
+        </div>
+        <div class="res-panel-info">
+          <h3>${regatta.name} Regatta</h3>
+          <span>${regatta.date} &middot; 2025 Season</span>
+        </div>
+      </div>
+      <div class="res-table-wrap">
+        <table class="medal-table">
+          <thead>
+            <tr>
+              <th class="th-cat">Category</th>
+              <th class="th-gold">&#127941;&nbsp; Gold</th>
+              <th class="th-silver">&#9679;&nbsp; Silver</th>
+              <th class="th-bronze">&#9679;&nbsp; Bronze</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildYearPanel(year) {
+  const yd = ECRC_RESULTS[year];
+  if (!yd || !yd.regattas.length) {
+    return `<div class="year-panel" data-year="${year}">
+      <div class="res-empty"><p>No results available for ${year}.</p></div>
+    </div>`;
+  }
+
+  const tabs = yd.regattas.map((r, i) => `
+    <button class="regatta-tab-btn${i === 0 ? ' active' : ''}" data-panel="${r.id}" data-year="${year}" onclick="switchRegatta('${year}','${r.id}',this)">
+      <div class="regatta-tab-logo"><img src="${r.logo}" alt="${r.name}" /></div>
+      <span class="regatta-tab-name">${r.short}</span>
+      <span class="regatta-tab-date">${r.date}</span>
+    </button>`).join('');
+
+  const panels = yd.regattas.map((r, i) => {
+    const html = buildPanel(r, yd.results);
+    return i === 0 ? html.replace('class="regatta-panel"', 'class="regatta-panel active"') : html;
+  }).join('');
+
+  return `<div class="year-panel" data-year="${year}">
+    <div class="regatta-tabs-wrap">
+      <div class="regatta-tabs" id="rtabs-${year}">${tabs}</div>
+    </div>
+    <div id="rpanels-${year}">${panels}</div>
+  </div>`;
+}
+
+function switchYear(year) {
+  document.querySelectorAll('.res-year-btn').forEach(b => b.classList.toggle('active', b.dataset.year == year));
+  document.querySelectorAll('#res-year-panels .year-panel').forEach(p => p.classList.toggle('active', p.dataset.year == year));
+}
+
+function switchRegatta(year, id, btn) {
+  document.getElementById('rtabs-' + year).querySelectorAll('.regatta-tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+  document.getElementById('rpanels-' + year).querySelectorAll('.regatta-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
+}
+
+(function init() {
+  const YEAR_ORDER = ['2025', '2024'];
+  const container = document.getElementById('res-year-panels');
+  container.innerHTML = YEAR_ORDER.map(y => buildYearPanel(y)).join('');
+  // default: activate current year
+  const defaultYear = '2025';
+  document.querySelector(`.year-panel[data-year="${defaultYear}"]`).classList.add('active');
+
+  document.getElementById('res-year-tabs').querySelectorAll('.res-year-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchYear(btn.dataset.year));
+  });
+})();
+</script>
+
+  <!-- ── clubs ── -->
+
+<!-- Clubs -->
+<section class="clubs-section" id="clubs">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Our Community</span>
+      <h2 class="section-title">Member Clubs</h2>
+      <p class="section-subtitle">The ECRC is proud to represent our member clubs along the East Coast.</p>
+    </div>
+    <div class="clubs-grid">
+
+      <!-- Arklow Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/Arklow RC.jpg" alt="Arklow Rowing Club logo" />
+        </div>
+        <h3>Arklow Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email Arklow RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Arklow RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Arklow RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+      <!-- Bray Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/Bray RC.jpg" alt="Bray Rowing Club logo" />
+        </div>
+        <h3>Bray Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email Bray RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Bray RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Bray RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+      <!-- Dalkey Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/Dalkey RC.jpg" alt="Dalkey Rowing Club logo" />
+        </div>
+        <h3>Dalkey Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email Dalkey RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Dalkey RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Dalkey RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+      <!-- Fingal Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/Fingal RC.jpg" alt="Fingal Rowing Club logo" />
+        </div>
+        <h3>Fingal Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email Fingal RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Fingal RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Fingal RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+      <!-- Greystones Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/Greystones Tc.jpg" alt="Greystones Rowing Club logo" />
+        </div>
+        <h3>Greystones Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email Greystones RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Greystones RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Greystones RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+      <!-- Skerries Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/Skerries RC.png" alt="Skerries Rowing Club logo" />
+        </div>
+        <h3>Skerries Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email Skerries RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Skerries RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Skerries RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+      <!-- St. Michael's Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/SMRC.jpg" alt="St. Michael's Rowing Club logo" />
+        </div>
+        <h3>St. Michael's Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email St. Michael's RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="St. Michael's RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="St. Michael's RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+      <!-- St. Patricks Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/St Pats RC.jpg" alt="St. Patricks Rowing Club logo" />
+        </div>
+        <h3>St. Patricks Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email St. Patricks RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="St. Patricks RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="St. Patricks RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+      <!-- Stella Maris Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/Stella Maris RC.jpg" alt="Stella Maris Rowing Club logo" />
+        </div>
+        <h3>Stella Maris Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email Stella Maris RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Stella Maris RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Stella Maris RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+      <!-- Vartry Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/Vartry RC.jpg" alt="Vartry Rowing Club logo" />
+        </div>
+        <h3>Vartry Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email Vartry RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Vartry RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Vartry RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+      <!-- Wicklow Rowing Club -->
+      <div class="club-card">
+        <div class="club-logo">
+          <img src="Clubs Logo/Wicklow RC.jpg" alt="Wicklow Rowing Club logo" />
+        </div>
+        <h3>Wicklow Rowing Club</h3>
+        <div class="club-social">
+          <a href="mailto:#" class="club-social-link email" title="Email Wicklow RC">&#9993;</a>
+          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Wicklow RC on Facebook">f</a>
+          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Wicklow RC on Instagram">&#9749;</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+  <!-- ── footer ── -->
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="gold-line"></div>
+  <div class="container">
+    <div class="footer-grid">
+
+      <!-- Brand column -->
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC Logo" />
+          <span class="footer-logo-text">East Coast Rowing Council</span>
+        </div>
+        <p>The governing body for coastal rowing on the East Coast of Ireland, covering counties Dublin, Wicklow, and North Wexford. Affiliated to the Irish Coastal Rowing Federation.</p>
+        <div class="social-links">
+          <a href="https://www.facebook.com/EastCoastRowingCouncil" class="social-link" title="Facebook" target="_blank" rel="noopener">f</a>
+          <a href="#" class="social-link" title="X / Twitter">&#120143;</a>
+          <a href="https://www.instagram.com/east.coastrowing/" class="social-link" title="Instagram" target="_blank" rel="noopener">&#9749;</a>
+          <a href="#" class="social-link" title="YouTube">&#9654;</a>
+          <a href="#" class="social-link" title="LinkedIn">in</a>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="index.html#news">News</a></li>
+          <li><a href="index.html#events">Events</a></li>
+          <li><a href="index.html#results">Results</a></li>
+          <li><a href="index.html#clubs">Clubs</a></li>
+          <li><a href="rulebook.html">Rulebook</a></li>
+          <li><a href="about.html">About Us</a></li>
+        </ul>
+      </div>
+
+      <!-- Resources -->
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#">Member Portal</a></li>
+          <li><a href="#">Event Registration</a></li>
+          <li><a href="#">Results Archive</a></li>
+          <li><a href="#">Coaching Licences</a></li>
+          <li><a href="#">Volunteer</a></li>
+          <li><a href="#">Newsletter</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:eastcoastrowingireland@gmail.com">eastcoastrowingireland@gmail.com</a></li>
+          <li><a href="privacy-policy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms of Use</a></li>
+          <li><a href="safeguarding.html">Safeguarding Policy</a></li>
+          <li><a href="#">Media Enquiries</a></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+  <div class="gold-line"></div>
+  <div class="container">
+    <div class="footer-bottom">
+      <p>&copy; 2025 East Coast Rowing Council. All rights reserved.</p>
+      <div class="footer-bottom-links">
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Use</a>
+        <a href="safeguarding.html">Safeguarding</a>
+        <a href="mailto:eastcoastrowingireland@gmail.com">Contact</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('open');
+    }
+
+    document.querySelectorAll('.mobile-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.remove('open');
+      });
+    });
+
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        if (window.scrollY >= sectionTop) current = section.getAttribute('id');
+      });
+      navLinks.forEach(a => {
+        a.classList.remove('active');
+        if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+      });
+    }, { passive: true });
+  </script>
+
+</body>
+</html>

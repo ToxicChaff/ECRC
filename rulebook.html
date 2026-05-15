@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rulebook — East Coast Rowing Council</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="container">
+      <span>&#9990; eastcoastrowingireland@gmail.com</span>
+      <span class="top-bar-right">
+        <a href="#">Member Portal</a> &nbsp;|&nbsp;
+        <a href="#">Volunteer</a> &nbsp;|&nbsp;
+        <a href="#">Newsletter</a>
+      </span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="index.html" class="nav-logo">
+        <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC Logo" />
+        <span class="nav-logo-text">East Coast Rowing Council</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#news">News</a></li>
+        <li><a href="index.html#events">Events</a></li>
+        <li><a href="index.html#results">Results</a></li>
+        <li><a href="index.html#clubs">Clubs</a></li>
+        <li><a href="rulebook.html" class="active">Rulebook</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li class="nav-divider"></li>
+      </ul>
+      <div class="nav-cta">
+        <a href="login.html" class="btn-login">Log In</a>
+      </div>
+      <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="mobile-menu" id="mobile-menu">
+      <a href="index.html">Home</a>
+      <a href="index.html#news">News</a>
+      <a href="index.html#events">Events</a>
+      <a href="index.html#results">Results</a>
+      <a href="index.html#clubs">Clubs</a>
+      <a href="rulebook.html">Rulebook</a>
+      <a href="about.html">About Us</a>
+      <a href="login.html" class="btn-login">Log In</a>
+    </div>
+  </nav>
+
+  <!-- Page header -->
+  <div class="page-hero">
+    <div class="container">
+      <span class="section-label">Official Documentation</span>
+      <h1>ECRC Rulebook</h1>
+      <p>Competition rules, safety standards, and governance policies for all ECRC-sanctioned events.</p>
+    </div>
+  </div>
+
+  <!-- PDF viewer -->
+  <div style="background:var(--off-white);padding:32px 0 0;">
+    <div class="container">
+
+      <!-- Toolbar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+          <h2 style="font-family:'Merriweather',serif;font-size:1.1rem;color:var(--navy);margin-bottom:2px;">2025 ECRC Rule Book — Version 5</h2>
+          <p style="font-size:0.8rem;color:var(--muted);margin:0;">Official competition rules for all ECRC-sanctioned events.</p>
+        </div>
+        <a href="Rule Book/2025 ECRC Rule Book V5.pdf"
+           download="2025 ECRC Rule Book V5.pdf"
+           style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:var(--white);font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:600;padding:10px 20px;border-radius:8px;text-decoration:none;transition:background 0.2s;"
+           onmouseover="this.style.background='var(--navy-mid)'" onmouseout="this.style.background='var(--navy)'">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </a>
+      </div>
+
+      <!-- PDF embed -->
+      <div style="border-radius:12px 12px 0 0;overflow:hidden;border:1px solid var(--border);border-bottom:none;box-shadow:0 4px 24px rgba(13,34,68,0.1);">
+        <object
+          data="Rule Book/2025 ECRC Rule Book V5.pdf"
+          type="application/pdf"
+          width="100%"
+          style="display:block;height:85vh;min-height:600px;">
+          <!-- Fallback for browsers without built-in PDF viewer -->
+          <div style="padding:48px;text-align:center;background:var(--white);">
+            <p style="color:var(--muted);margin-bottom:16px;">Your browser does not support inline PDF viewing.</p>
+            <a href="Rule Book/2025 ECRC Rule Book V5.pdf" download="2025 ECRC Rule Book V5.pdf"
+               style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:var(--white);font-size:0.85rem;font-weight:600;padding:11px 22px;border-radius:8px;text-decoration:none;">
+              Download the Rulebook
+            </a>
+          </div>
+        </object>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="gold-line"></div>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC Logo" />
+            <span class="footer-logo-text">East Coast Rowing Council</span>
+          </div>
+          <p>The governing body for coastal rowing on the East Coast of Ireland, covering counties Dublin, Wicklow, and North Wexford. Affiliated to the Irish Coastal Rowing Federation.</p>
+          <div class="social-links">
+            <a href="https://www.facebook.com/EastCoastRowingCouncil" class="social-link" title="Facebook" target="_blank" rel="noopener">f</a>
+            <a href="#" class="social-link" title="X / Twitter">&#120143;</a>
+            <a href="https://www.instagram.com/east.coastrowing/" class="social-link" title="Instagram" target="_blank" rel="noopener">&#9749;</a>
+            <a href="#" class="social-link" title="YouTube">&#9654;</a>
+            <a href="#" class="social-link" title="LinkedIn">in</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#news">News</a></li>
+            <li><a href="index.html#events">Events</a></li>
+            <li><a href="index.html#results">Results</a></li>
+            <li><a href="index.html#clubs">Clubs</a></li>
+            <li><a href="rulebook.html">Rulebook</a></li>
+            <li><a href="about.html">About Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Member Portal</a></li>
+            <li><a href="#">Event Registration</a></li>
+            <li><a href="#">Results Archive</a></li>
+            <li><a href="#">Coaching Licences</a></li>
+            <li><a href="#">Volunteer</a></li>
+            <li><a href="#">Newsletter</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:eastcoastrowingireland@gmail.com">eastcoastrowingireland@gmail.com</a></li>
+            <li><a href="privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Use</a></li>
+            <li><a href="safeguarding.html">Safeguarding Policy</a></li>
+            <li><a href="#">Media Enquiries</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="gold-line"></div>
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2025 East Coast Rowing Council. All rights reserved.</p>
+        <div class="footer-bottom-links">
+          <a href="privacy-policy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Use</a>
+          <a href="safeguarding.html">Safeguarding</a>
+          <a href="mailto:eastcoastrowingireland@gmail.com">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      document.getElementById('mobile-menu').classList.toggle('open');
+    }
+    document.querySelectorAll('.mobile-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.remove('open');
+      });
+    });
+  </script>
+
+</body>
+</html>
