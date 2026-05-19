@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — East Coast Rowing Council</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0d2244; --navy-dark: #071629; --navy-mid: #163a6e;
+      --gold: #c8992a; --gold-light: #e4b84a;
+      --white: #ffffff; --off-white: #f5f6fa;
+      --border: #e2e8f0; --muted: #64748b;
+      --success: #16a34a; --danger: #dc2626;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--off-white); display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 240px; min-height: 100vh; background: var(--navy-dark);
+      display: flex; flex-direction: column; flex-shrink: 0;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    }
+    .sidebar-brand {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-brand img { width: 36px; height: 36px; border-radius: 6px; object-fit: contain; }
+    .sidebar-brand-text { font-size: 0.75rem; font-weight: 700; color: var(--white); line-height: 1.3; }
+    .sidebar-brand-text span { display: block; color: var(--gold); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .sidebar-user {
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.72rem; color: rgba(255,255,255,0.45);
+    }
+    .sidebar-user strong { display: block; color: rgba(255,255,255,0.8); font-size: 0.78rem; margin-bottom: 2px; }
+    .sidebar-nav { flex: 1; padding: 12px 10px; }
+    .sidebar-label {
+      font-size: 0.6rem; font-weight: 700; color: rgba(255,255,255,0.3);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 12px 10px 6px;
+    }
+    .nav-btn {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 10px 12px; border-radius: 8px;
+      border: none; background: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500;
+      color: rgba(255,255,255,0.6); text-align: left;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+    .nav-btn.active { background: rgba(200,153,42,0.18); color: var(--white); }
+    .nav-btn .nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+    .sidebar-footer { padding: 16px 10px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .btn-logout {
+      display: flex; align-items: center; gap: 8px;
+      width: 100%; padding: 9px 12px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1); background: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 500;
+      color: rgba(255,255,255,0.5); transition: all 0.15s;
+    }
+    .btn-logout:hover { background: rgba(220,38,38,0.15); border-color: rgba(220,38,38,0.4); color: #fca5a5; }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 60px; display: flex; align-items: center;
+      justify-content: space-between; position: sticky; top: 0; z-index: 10;
+    }
+    .topbar h1 { font-size: 1rem; font-weight: 700; color: var(--navy); }
+    .topbar-badge {
+      background: rgba(200,153,42,0.12); color: var(--gold);
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+    }
+    .content { padding: 32px; flex: 1; }
+
+    /* ── Tabs / panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px; margin-bottom: 24px;
+    }
+    .card-title {
+      font-family: 'Merriweather', serif; font-size: 1rem;
+      font-weight: 700; color: var(--navy); margin-bottom: 4px;
+    }
+    .card-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 20px; }
+
+    /* ── Forms ── */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    .form-row.single { grid-template-columns: 1fr; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 0.75rem; font-weight: 600; color: var(--navy); letter-spacing: 0.03em; }
+    .field input, .field select, .field textarea {
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 9px 12px; font-family: 'Inter', sans-serif; font-size: 0.85rem;
+      color: var(--navy); background: var(--white); outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); }
+    .field textarea { resize: vertical; min-height: 90px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--navy); color: var(--white);
+      border: none; border-radius: 8px; padding: 10px 20px;
+      font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--navy-mid); }
+    .btn-danger {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(220,38,38,0.08); color: var(--danger);
+      border: 1px solid rgba(220,38,38,0.2); border-radius: 6px;
+      padding: 5px 12px; font-family: 'Inter', sans-serif; font-size: 0.75rem;
+      font-weight: 600; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-danger:hover { background: rgba(220,38,38,0.15); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(13,34,68,0.07); color: var(--navy);
+      border: 1px solid rgba(13,34,68,0.18); border-radius: 6px;
+      padding: 5px 12px; font-family: 'Inter', sans-serif; font-size: 0.75rem;
+      font-weight: 600; cursor: pointer; transition: background 0.15s;
+    }
+    /* Year filter tabs override for light admin card background */
+    #events-year-tabs .res-year-btn {
+      background: rgba(13,34,68,0.06); border-color: rgba(13,34,68,0.15);
+      color: var(--navy);
+    }
+    #events-year-tabs .res-year-btn:hover { background: rgba(13,34,68,0.12); color: var(--navy); }
+    #events-year-tabs .res-year-btn.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .btn-secondary:hover { background: rgba(13,34,68,0.14); }
+    .btn-sm { padding: 6px 14px; font-size: 0.78rem; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--navy); color: var(--white);
+      padding: 12px 20px; border-radius: 10px;
+      font-size: 0.82rem; font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transform: translateY(80px); opacity: 0;
+      transition: transform 0.25s, opacity 0.25s;
+      z-index: 999;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+
+    /* ── Results tab ── */
+    .regatta-select-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .regatta-select-row select { flex: 1; min-width: 200px; }
+    .medal-edit-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .medal-edit-table th {
+      padding: 10px 14px; text-align: left; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+      border-bottom: 2px solid var(--border); background: var(--off-white);
+    }
+    .medal-edit-table td { padding: 7px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .medal-edit-table tr:last-child td { border-bottom: none; }
+    .medal-edit-table tr:hover td { background: #fafbff; }
+    .medal-edit-table .cat-name { font-weight: 500; color: var(--navy); width: 32%; }
+    .medal-edit-table select { width: 100%; font-size: 0.8rem; padding: 5px 8px; }
+    .gold-col { background: rgba(200,153,42,0.04); }
+    .silver-col { background: rgba(192,192,192,0.04); }
+    .bronze-col { background: rgba(180,110,50,0.04); }
+
+    /* ── List items ── */
+    .item-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .item-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; background: var(--off-white);
+      border: 1px solid var(--border); border-radius: 8px;
+    }
+    .item-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: contain; background: white; border: 1px solid var(--border); padding: 2px; flex-shrink: 0; }
+    .item-info { flex: 1; }
+    .item-info strong { display: block; font-size: 0.85rem; color: var(--navy); font-weight: 600; }
+    .item-info span { font-size: 0.75rem; color: var(--muted); }
+    .empty-state { text-align: center; padding: 32px; color: var(--muted); font-size: 0.85rem; background: var(--off-white); border-radius: 8px; border: 1px dashed var(--border); }
+
+    /* ── Rulebook list ── */
+    .rulebook-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px; background: var(--off-white);
+      border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;
+    }
+    .rulebook-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .rulebook-info { flex: 1; }
+    .rulebook-info strong { display: block; color: var(--navy); font-weight: 600; font-size: 0.88rem; }
+    .rulebook-info span { font-size: 0.75rem; color: var(--muted); }
+    .current-badge {
+      background: rgba(22,163,74,0.1); color: var(--success);
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 3px 9px; border-radius: 20px;
+    }
+    hr.divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+    /* ── File upload ── */
+    .file-upload-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px; background: var(--off-white);
+      border: 1.5px dashed var(--border); border-radius: 8px;
+      cursor: pointer; font-size: 0.82rem; font-weight: 500; color: var(--navy);
+      transition: border-color 0.15s, background 0.15s; width: 100%;
+    }
+    .file-upload-label:hover { border-color: var(--navy-mid); background: rgba(13,34,68,0.04); }
+    .file-upload-label input[type="file"] { display: none; }
+    .file-chosen { font-size: 0.74rem; color: var(--muted); margin-top: 5px; }
+    /* ── Accounts ── */
+    .account-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--off-white); border: 1px solid var(--border); border-radius: 8px; }
+    .account-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--navy); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 700; color: var(--white); flex-shrink: 0; }
+    .account-info { flex: 1; }
+    .account-info strong { display: block; font-size: 0.85rem; color: var(--navy); }
+    .account-info span { font-size: 0.75rem; color: var(--muted); }
+    .role-badge { font-size: 0.65rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .role-badge.admin { background: rgba(200,153,42,0.14); color: var(--gold); }
+    .role-badge.club  { background: rgba(13,34,68,0.08); color: var(--navy); }
+    .security-note { background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.18); border-radius: 8px; padding: 10px 14px; font-size: 0.75rem; color: #991b1b; margin-bottom: 20px; }
+
+    /* ── Crew subtabs ── */
+    .crew-subtabs { display: flex; gap: 0; margin-bottom: 0; }
+    .crew-subtab-btn {
+      padding: 10px 22px; border: 1px solid var(--border); border-bottom: none;
+      background: rgba(13,34,68,0.04); color: var(--muted);
+      border-radius: 8px 8px 0 0; font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer; margin-right: 4px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .crew-subtab-btn.active { background: var(--white); color: var(--navy); }
+    .crew-subtab-btn:hover:not(.active) { background: rgba(13,34,68,0.08); color: var(--navy); }
+
+    /* ── Overview matrix ── */
+    .ov-matrix-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .ov-matrix-table th { padding: 8px 10px; text-align: left; font-size: 0.63rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--border); background: var(--off-white); white-space: nowrap; }
+    .ov-matrix-first { min-width: 150px; position: sticky; left: 0; z-index: 3; background: var(--off-white); border-right: 2px solid var(--border); }
+    .ov-matrix-col { min-width: 110px; border-left: 1px solid var(--border); text-align: center; }
+    .ov-matrix-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .ov-matrix-table tr:last-child td { border-bottom: none; }
+    .ov-row-label { font-weight: 600; color: var(--navy); font-size: 0.78rem; white-space: nowrap; position: sticky; left: 0; z-index: 2; background: var(--white); border-right: 2px solid var(--border); }
+    .ov-matrix-table tr:hover .ov-row-label,
+    .ov-matrix-table tr:hover .ov-matrix-cell,
+    .ov-matrix-table tr:hover .ov-matrix-empty { background: rgba(13,34,68,0.025); }
+    .ov-crew-num { display: block; font-size: 0.68rem; font-weight: 500; color: var(--muted); }
+    .ov-matrix-empty { background: rgba(245,246,250,0.7); }
+    .ov-matrix-cell { background: var(--white); text-align: center; }
+    .ov-rower-tag { display: block; font-size: 0.71rem; color: var(--navy); line-height: 1.5; }
+    .ov-dup-tag { color: var(--danger) !important; font-weight: 700; }
+    .ov-cox-tag { display: block; font-size: 0.68rem; color: #92700f; border-top: 1px dotted rgba(200,153,42,0.35); margin-top: 2px; padding-top: 2px; }
+    /* ── Draw Sheet matrix ── */
+    .draw-matrix-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    .draw-club-col { background: var(--navy-dark); color: white; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 14px; text-align: left; position: sticky; left: 0; z-index: 4; border-right: 2px solid rgba(255,255,255,0.15); vertical-align: middle; }
+    .draw-lane-start-row td, .draw-lane-start-row th { background: var(--navy-dark); border-left: 1px solid rgba(255,255,255,0.08); padding: 8px 10px; text-align: center; }
+    .draw-lane-input-label { display: block; font-size: 0.6rem; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+    .draw-lane-input { width: 60px; text-align: center; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 4px 6px; color: white; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700; outline: none; }
+    .draw-lane-input:focus { border-color: var(--gold); }
+    .draw-cat-header-cell { background: var(--navy); color: white; padding: 8px 10px; text-align: center; border-left: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.15); vertical-align: bottom; }
+    .draw-row-label { padding: 7px 14px; border-bottom: 1px solid var(--border); position: sticky; left: 0; z-index: 1; border-right: 2px solid var(--border); white-space: nowrap; font-size: 0.82rem; vertical-align: middle; }
+    .draw-result-cell { text-align: center; padding: 7px 8px; border-bottom: 1px solid var(--border); border-left: 1px solid rgba(226,232,240,0.5); vertical-align: middle; min-width: 80px; }
+    .draw-empty-cell { border-bottom: 1px solid var(--border); border-left: 1px solid rgba(226,232,240,0.5); }
+    .draw-lane-num { font-size: 1.4rem; font-weight: 900; font-family: 'Merriweather', serif; color: var(--navy); line-height: 1; }
+    .draw-x { font-size: 1rem; color: rgba(13,34,68,0.3); }
+    .dup-warning { margin-top: 12px; padding: 10px 14px; background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.18); border-radius: 8px; font-size: 0.78rem; color: #991b1b; }
+    @media print {
+      @page { size: A4 landscape; margin: 8mm; }
+      .sidebar, .topbar, .crew-subtabs, #crew-panel-submit,
+      #crew-ov-filter-row, .btn-danger, .btn-secondary, .btn-primary { display: none !important; }
+      body { display: block; background: white; }
+      .main { margin: 0; }
+      .content { padding: 6px; }
+      .card { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+      /* Remove scroll wrapper so table can fill the page */
+      #crews-overview-content > div { overflow: visible !important; }
+      /* Force table to fill page width */
+      .ov-matrix-table {
+        width: 100% !important;
+        table-layout: fixed;
+        font-size: 0.52rem;
+        border-collapse: collapse;
+      }
+      .ov-matrix-table th, .ov-matrix-table td {
+        padding: 2px 3px !important;
+        white-space: normal !important;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        min-width: 0 !important;
+      }
+      /* Disable sticky positioning — doesn't work in print */
+      .ov-matrix-first, .ov-row-label {
+        position: static !important;
+      }
+      .ov-rower-tag, .ov-cox-tag { font-size: 0.48rem !important; line-height: 1.4; }
+      .ov-crew-num { font-size: 0.45rem !important; }
+    }
+
+    /* ── Submit matrix (reuses .ov-matrix-* classes) ── */
+    .crew-add-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: rgba(13,34,68,0.07); border: 1px solid rgba(13,34,68,0.18); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600; color: var(--navy); cursor: pointer; transition: background 0.15s; }
+    .crew-add-btn:hover { background: rgba(13,34,68,0.14); }
+    .submit-cell { vertical-align: top; padding: 4px 5px !important; }
+    .submit-cell input { display: block; width: 100%; margin-bottom: 2px; border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; font-family: 'Inter', sans-serif; font-size: 0.71rem; color: var(--navy); background: white; outline: none; }
+    .submit-cell input:focus { border-color: var(--gold); }
+    .submit-cell .cox-input { border-color: rgba(200,153,42,0.4) !important; background: rgba(200,153,42,0.04) !important; margin-top: 3px !important; }
+    .submit-add-crew-tr td { border-bottom: 2px solid var(--border) !important; padding: 5px 10px !important; }
+    /* Lock banner */
+    .lock-banner { display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:10px; margin-bottom:16px; }
+    /* Club select with logo */
+    .club-sel-wrap { display:flex; align-items:center; gap:6px; }
+    .club-sel-logo { width:22px; height:22px; border-radius:3px; object-fit:contain; flex-shrink:0; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC" />
+    <div class="sidebar-brand-text">
+      East Coast Rowing Council
+      <span>Admin Panel</span>
+    </div>
+  </div>
+  <div class="sidebar-user">
+    <strong id="user-name">Loading...</strong>
+    <span id="user-email"></span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-label" data-roles="admin">Manage</div>
+    <button class="nav-btn" data-roles="admin" onclick="showTab('results', this)">
+      <span class="nav-icon">🏆</span> Results
+    </button>
+    <button class="nav-btn" data-roles="admin" onclick="showTab('events', this)">
+      <span class="nav-icon">📅</span> Events
+    </button>
+    <button class="nav-btn" data-roles="admin" onclick="showTab('news', this)">
+      <span class="nav-icon">📰</span> News
+    </button>
+    <button class="nav-btn" data-roles="admin" onclick="showTab('rulebook', this)">
+      <span class="nav-icon">📋</span> Rulebook
+    </button>
+    <div class="sidebar-label" data-roles="admin,club">Crews</div>
+    <button class="nav-btn" data-roles="admin,club" onclick="showTab('crews', this)">
+      <span class="nav-icon">🚣</span> Crew List
+    </button>
+    <div class="sidebar-label" data-roles="admin">Settings</div>
+    <button class="nav-btn" data-roles="admin" onclick="showTab('accounts', this)">
+      <span class="nav-icon">👤</span> Accounts
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="logout()">
+      <span>&#10148;</span> Log Out
+    </button>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <h1 id="topbar-title">Regatta Results</h1>
+    <span class="topbar-badge">Local Preview</span>
+  </div>
+
+  <div class="content">
+
+    <!-- ── Results Tab ── -->
+    <div id="tab-results" class="tab-panel active">
+      <div class="card">
+        <div class="card-title">Submit Regatta Results</div>
+        <div class="card-sub">Select a regatta then fill in Gold, Silver and Bronze for each category. Click Save when done.</div>
+
+        <div class="regatta-select-row">
+          <div class="field" style="margin:0;">
+            <label>Year</label>
+            <input type="number" id="results-year-select" value="2026" min="2024" max="2099" step="1" onchange="onYearChange()" style="min-width:90px;max-width:100px;" />
+          </div>
+          <div class="field" style="flex:1;margin:0;">
+            <label>Select Regatta</label>
+            <select id="results-regatta-select" onchange="loadResultsTable()"></select>
+          </div>
+          <button class="btn-primary" onclick="saveResults()">&#10003; Save Results</button>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="medal-edit-table" id="results-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th class="gold-col">&#127941; Gold</th>
+                <th class="silver-col">&#9679; Silver</th>
+                <th class="bronze-col">&#9679; Bronze</th>
+              </tr>
+            </thead>
+            <tbody id="results-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Events Tab ── -->
+    <div id="tab-events" class="tab-panel">
+
+      <div class="card">
+        <div class="card-title">Current Events</div>
+        <div class="card-sub">Filter by year. Click Edit to change details.</div>
+        <div class="res-year-tabs" id="events-year-tabs" style="margin-bottom:16px;"></div>
+        <div class="item-list" id="events-list"></div>
+      </div>
+
+      <div class="card" id="event-form-card">
+        <div class="card-title" id="event-form-title">Add New Event</div>
+        <div class="card-sub" id="event-form-sub">Add a regatta or event to the calendar.</div>
+        <div class="form-row three">
+          <div class="field">
+            <label>Event Type</label>
+            <select id="evt-type">
+              <option value="ecrc_race">ECRC Race</option>
+              <option value="charity">Charity Event</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" id="evt-date" />
+          </div>
+          <div class="field">
+            <label>End Date (leave blank for single-day)</label>
+            <input type="date" id="evt-end-date" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Host Club</label>
+            <div class="club-sel-wrap">
+              <img id="evt-club-logo" class="club-sel-logo" src="" style="display:none;" />
+              <select id="evt-club" style="flex:1;" onchange="syncSelectLogo(this, document.getElementById('evt-club-logo'))">
+                <option value="">Select club...</option>
+                <option value="stmichaels" data-logo="Clubs Logo/SMRC.jpg">St. Michael's RC</option>
+                <option value="dalkey"     data-logo="Clubs Logo/Dalkey RC.jpg">Dalkey RC</option>
+                <option value="skerries"   data-logo="Clubs Logo/Skerries RC.png">Skerries RC</option>
+                <option value="stella"     data-logo="Clubs Logo/Stella Maris RC.jpg">Stella Maris RC</option>
+                <option value="bray"       data-logo="Clubs Logo/Bray RC.jpg">Bray RC</option>
+                <option value="stpats"     data-logo="Clubs Logo/St Pats RC.jpg">St. Patricks RC</option>
+                <option value="fingal"     data-logo="Clubs Logo/Fingal RC.jpg">Fingal RC</option>
+                <option value="greystones" data-logo="Clubs Logo/Greystones Tc.jpg">Greystones RC</option>
+                <option value="wicklow"    data-logo="Clubs Logo/Wicklow RC.jpg">Wicklow RC</option>
+                <option value="arklow"     data-logo="Clubs Logo/Arklow RC.jpg">Arklow RC</option>
+                <option value="vartry"     data-logo="Clubs Logo/Vartry RC.jpg">Vartry RC</option>
+                <option value="icrf"       data-logo="Brand_assets/ECRC-Logo.jpg">ICRF Championship</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Location / Venue</label>
+            <input type="text" id="evt-location" placeholder="e.g. Wicklow Harbour" />
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Google Maps Link (placeholder)</label>
+            <input type="url" id="evt-map" placeholder="https://maps.google.com/?q=..." />
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn-primary" id="event-save-btn" onclick="addEvent()">+ Add Event</button>
+          <button class="btn-danger" id="event-cancel-btn" onclick="cancelEditEvent()" style="display:none;">&#10005; Cancel Edit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── News Tab ── -->
+    <div id="tab-news" class="tab-panel">
+
+      <div class="card">
+        <div class="card-title">News & Announcements</div>
+        <div class="card-sub">Posts added here will appear in the news section on the homepage.</div>
+        <div class="item-list" id="news-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Add News Post</div>
+        <div class="card-sub">Create a new announcement or news update.</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Headline</label>
+            <input type="text" id="news-title" placeholder="e.g. Results from Skerries Regatta" />
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" id="news-date" />
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Content / Announcement</label>
+            <textarea id="news-body" placeholder="Write the full announcement here..."></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Image (optional — max 2 MB)</label>
+            <label class="file-upload-label">
+              &#128247; Choose Image
+              <input type="file" id="news-image-file" accept="image/*" onchange="document.getElementById('news-image-name').textContent = this.files[0]?.name || ''" />
+            </label>
+            <span class="file-chosen" id="news-image-name"></span>
+          </div>
+          <div class="field">
+            <label>Video URL (optional — YouTube or Vimeo)</label>
+            <input type="url" id="news-video-url" placeholder="https://www.youtube.com/watch?v=..." />
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Link URL (optional)</label>
+            <input type="url" id="news-link" placeholder="https://..." />
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addNews()">+ Publish Post</button>
+      </div>
+    </div>
+
+    <!-- ── Rulebook Tab ── -->
+    <div id="tab-rulebook" class="tab-panel">
+
+      <div class="card">
+        <div class="card-title">Rulebook Library</div>
+        <div class="card-sub">The most recently added rulebook is shown as current on the Rulebook page.</div>
+        <div id="rulebook-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Upload New Rulebook</div>
+        <div class="card-sub">Select the PDF, fill in the year and version, then click Upload. PDFs up to 8 MB are supported.</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Year</label>
+            <input type="number" id="rb-year" placeholder="2026" min="2020" max="2040" />
+          </div>
+          <div class="field">
+            <label>Version</label>
+            <input type="text" id="rb-version" placeholder="V1" />
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>PDF File (max 8 MB)</label>
+            <label class="file-upload-label">
+              &#128196; Choose PDF
+              <input type="file" id="rb-pdf-file" accept=".pdf,application/pdf" onchange="document.getElementById('rb-pdf-name').textContent = this.files[0]?.name || ''" />
+            </label>
+            <span class="file-chosen" id="rb-pdf-name"></span>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Notes (optional)</label>
+            <input type="text" id="rb-notes" placeholder="e.g. Updated equipment regulations for 2026" />
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addRulebook()">&#8679; Upload Rulebook</button>
+      </div>
+    </div>
+
+    <!-- ── Crews Tab ── -->
+    <div id="tab-crews" class="tab-panel">
+
+      <!-- Subtab switcher -->
+      <div class="crew-subtabs">
+        <button class="crew-subtab-btn active" onclick="showCrewSubtab('overview', this)">&#128203; Overview</button>
+        <button class="crew-subtab-btn" onclick="showCrewSubtab('draw', this)">&#9635; Draw Sheet</button>
+        <button class="crew-subtab-btn" onclick="showCrewSubtab('submit', this)">&#9998; Submit Crews</button>
+      </div>
+
+      <!-- Shared year + regatta selector -->
+      <div class="card" style="border-radius:0 12px 0 0;margin-bottom:0;border-bottom:none;">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="field" style="margin:0;">
+            <label>Year</label>
+            <input type="number" id="crew-year" value="2026" min="2024" max="2099" style="max-width:100px;" onchange="onCrewYearChange()" />
+          </div>
+          <div class="field" style="flex:1;min-width:180px;margin:0;">
+            <label>Regatta</label>
+            <select id="crew-regatta-select" onchange="onCrewRegattaChange()"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overview panel -->
+      <div id="crew-panel-overview" class="card" style="margin-bottom:24px;border-radius:0 0 12px 12px;border-top:none;">
+        <div id="crew-ov-filter-row" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:0.75rem;font-weight:600;color:var(--muted);">Filter by club:</span>
+          <select id="ov-filter-club" onchange="renderOverview()" style="font-size:0.8rem;padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;">
+            <option value="">All Clubs</option>
+          </select>
+        </div>
+        <div id="crews-overview-content"></div>
+      </div>
+
+      <!-- Draw Sheet panel -->
+      <div id="crew-panel-draw" class="card" style="margin-bottom:24px;border-radius:0 0 12px 12px;border-top:none;display:none;">
+        <div id="crews-draw-content"></div>
+      </div>
+
+      <!-- Submit panel -->
+      <div id="crew-panel-submit" class="card" style="margin-bottom:24px;border-radius:0 0 12px 12px;border-top:none;display:none;">
+        <div id="submit-panel-content"><!-- filled by renderSubmitTable() --></div>
+      </div>
+
+    </div>
+
+    <!-- ── Accounts Tab ── -->
+    <div id="tab-accounts" class="tab-panel">
+
+      <div class="card">
+        <div class="card-title">Admin Accounts</div>
+        <div class="card-sub">Accounts that can log in to this admin panel.</div>
+        <div class="security-note">&#9888; Passwords are stored locally in this browser. Full account security will be enabled when Firebase is set up.</div>
+        <div class="item-list" id="accounts-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Create New Account</div>
+        <div class="card-sub">Add a login for another admin or club representative.</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" id="acc-name" placeholder="e.g. John Murphy" />
+          </div>
+          <div class="field">
+            <label>Email Address</label>
+            <input type="email" id="acc-email" placeholder="john@club.ie" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="acc-password" placeholder="Choose a password" />
+          </div>
+          <div class="field">
+            <label>Role</label>
+            <select id="acc-role" onchange="toggleClubField()">
+              <option value="admin">Admin — full access</option>
+              <option value="club">Club — crew management</option>
+              <option value="personal">Personal — individual rower</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row single" id="acc-club-row" style="display:none;">
+          <div class="field">
+            <label>Assigned Club</label>
+            <div class="club-sel-wrap">
+              <img id="acc-club-logo" class="club-sel-logo" src="" style="display:none;" />
+              <select id="acc-club" style="flex:1;" onchange="syncSelectLogo(this, document.getElementById('acc-club-logo'))">
+                <option value="">Select club...</option>
+                <option>Arklow RC</option>
+                <option>Bray RC</option>
+                <option>Dalkey RC</option>
+                <option>Fingal RC</option>
+                <option>Greystones RC</option>
+                <option>Skerries RC</option>
+                <option>St. Michael's RC</option>
+                <option>St. Patricks RC</option>
+                <option>Stella Maris RC</option>
+                <option>Vartry RC</option>
+                <option>Wicklow RC</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addAccount()">+ Create Account</button>
+      </div>
+
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── Auth guard + role-based UI ── */
+const authRaw = localStorage.getItem('ecrc_auth');
+if (!authRaw) { window.location.href = 'login.html'; }
+const auth = JSON.parse(authRaw || '{}');
+const userRole = auth.role || 'admin';
+const userClub = auth.club || '';
+
+document.getElementById('user-name').textContent  = auth.name  || 'Admin';
+document.getElementById('user-email').textContent = auth.email || '';
+
+// Show/hide sidebar items based on role
+document.querySelectorAll('[data-roles]').forEach(el => {
+  const allowed = el.dataset.roles.split(',');
+  if (!allowed.includes(userRole)) el.style.display = 'none';
+});
+
+function logout() {
+  localStorage.removeItem('ecrc_auth');
+  window.location.href = 'login.html';
+}
+
+/* ── Tab switching ── */
+const TAB_TITLES = {
+  results: 'Regatta Results', events: 'Events & Calendar',
+  news: 'News & Announcements', rulebook: 'Rulebook Library',
+  crews: 'Crew List', accounts: 'Accounts'
+};
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('topbar-title').textContent = TAB_TITLES[name] || name;
+}
+
+/* ── Toast ── */
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ════════════════════════════════
+   RESULTS
+════════════════════════════════ */
+const DEFAULT_REGATTAS_2025 = [
+  { id: 'stmichaels', name: "St. Michael's RC", date: '17 May', logo: 'Clubs Logo/SMRC.jpg' },
+  { id: 'dalkey',     name: 'Dalkey RC',         date: '30 May', logo: 'Clubs Logo/Dalkey RC.jpg' },
+  { id: 'skerries',   name: 'Skerries RC',        date: '6 Jun',  logo: 'Clubs Logo/Skerries RC.png' },
+  { id: 'stella',     name: 'Stella Maris RC',    date: '21 Jun', logo: 'Clubs Logo/Stella Maris RC.jpg' },
+  { id: 'bray',       name: 'Bray RC',            date: '27 Jun', logo: 'Clubs Logo/Bray RC.jpg' },
+  { id: 'stpats',     name: 'St. Patricks RC',    date: '4 Jul',  logo: 'Clubs Logo/St Pats RC.jpg' },
+  { id: 'fingal',     name: 'Fingal RC',          date: '18 Jul', logo: 'Clubs Logo/Fingal RC.jpg' },
+  { id: 'greystones', name: 'Greystones RC',      date: '25 Jul', logo: 'Clubs Logo/Greystones Tc.jpg' },
+  { id: 'wicklow',    name: 'Wicklow RC',         date: '3 Aug',  logo: 'Clubs Logo/Wicklow RC.jpg' },
+];
+
+function getRegattasForYear(year) {
+  const events = getEvents();
+  const races = events.filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === parseInt(year));
+  if (!races.length && year == 2025) return DEFAULT_REGATTAS_2025;
+  if (!races.length) return [];
+  return races.map(e => {
+    const d = new Date(e.date);
+    const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+    const id = e.id || (e.club.toLowerCase().replace(/[^a-z]/g,'').slice(0,10));
+    return { id, name: e.club, date: dateStr, logo: e.logo };
+  });
+}
+
+const CATEGORIES = [
+  'Under 12s','Under 14 Boys','Under 14 Girls','Under 16 Boys','Under 16 Girls',
+  'Under 18 Boys','Under 18 Girls','Under 21 Mens','Under 21 Womens','Mixed',
+  "Novice Men's","Novice Women's",'Intermediate Mens',"Intermediate Women's",
+  'Junior Mens','Junior Womens','Senior Mens',"Senior Women's",'Masters Mens','Masters Womens',
+];
+
+const CLUBS_LIST = [
+  '','Arklow RC','Bray RC','Dalkey RC','Fingal RC','Greystones RC',
+  'Skerries RC',"St. Michael's RC",'St. Patricks RC','Stella Maris RC','Vartry RC','Wicklow RC',
+];
+
+function getAllResultsData() {
+  try { return JSON.parse(localStorage.getItem('ecrc_admin_results') || '{}'); } catch { return {}; }
+}
+
+function getSelectedYear() {
+  return document.getElementById('results-year-select').value;
+}
+
+function onYearChange() {
+  buildRegattaSelect();
+  loadResultsTable();
+}
+
+function buildRegattaSelect() {
+  const year = getSelectedYear();
+  const regattas = getRegattasForYear(year);
+  const sel = document.getElementById('results-regatta-select');
+  sel.innerHTML = regattas.length
+    ? regattas.map(r => `<option value="${r.id}">${r.name} — ${r.date}</option>`).join('')
+    : '<option value="">No ECRC races found for this year</option>';
+}
+
+function clubOptions(selected) {
+  return CLUBS_LIST.map(c => `<option value="${c}"${c === selected ? ' selected' : ''}>${c || '— not set —'}</option>`).join('');
+}
+
+function medalSelectHtml(cat, medalIdx, selected, colClass) {
+  const uid = `ms_${cat.replace(/\W/g,'')}_${medalIdx}`;
+  const logo = CLUB_LOGOS[selected] || '';
+  return `<td class="${colClass}">
+    <div class="club-sel-wrap">
+      <img id="${uid}_logo" class="club-sel-logo" src="${logo}" style="${logo ? '' : 'display:none;'}" />
+      <select data-cat="${escHtml(cat)}" data-medal="${medalIdx}"
+        onchange="syncSelectLogo(this,document.getElementById('${uid}_logo'))"
+        style="flex:1;">${clubOptions(selected)}</select>
+    </div>
+  </td>`;
+}
+
+function loadResultsTable() {
+  const year = getSelectedYear();
+  const regattaId = document.getElementById('results-regatta-select').value;
+  const allData = getAllResultsData();
+  const regattaData = (allData[year] && allData[year][regattaId]) || {};
+  const tbody = document.getElementById('results-tbody');
+  tbody.innerHTML = CATEGORIES.map(cat => {
+    const m = regattaData[cat] || ['', '', ''];
+    return `<tr>
+      <td class="cat-name">${cat}</td>
+      ${medalSelectHtml(cat, 0, m[0], 'gold-col')}
+      ${medalSelectHtml(cat, 1, m[1], 'silver-col')}
+      ${medalSelectHtml(cat, 2, m[2], 'bronze-col')}
+    </tr>`;
+  }).join('');
+}
+
+function saveResults() {
+  const year = getSelectedYear();
+  const regattaId = document.getElementById('results-regatta-select').value;
+  if (!regattaId) { showToast('No regatta selected'); return; }
+  const allData = getAllResultsData();
+  if (!allData[year]) allData[year] = {};
+  if (!allData[year][regattaId]) allData[year][regattaId] = {};
+  document.querySelectorAll('#results-tbody select').forEach(sel => {
+    const cat = sel.dataset.cat;
+    const idx = parseInt(sel.dataset.medal);
+    if (!allData[year][regattaId][cat]) allData[year][regattaId][cat] = ['', '', ''];
+    allData[year][regattaId][cat][idx] = sel.value;
+  });
+  // Remove empty rows
+  Object.keys(allData[year][regattaId]).forEach(cat => {
+    if (allData[year][regattaId][cat].every(v => !v)) delete allData[year][regattaId][cat];
+  });
+  localStorage.setItem('ecrc_admin_results', JSON.stringify(allData));
+  showToast('Results saved successfully');
+}
+
+/* ════════════════════════════════
+   EVENTS
+════════════════════════════════ */
+const DEFAULT_EVENTS = [
+  { id: 'e1', type: 'ecrc_race', date: '2026-05-16', club: "St. Michael's RC", logo: 'Clubs Logo/SMRC.jpg', location: '', map: '#' },
+  { id: 'e2', type: 'ecrc_race', date: '2026-05-29', club: 'Dalkey RC',         logo: 'Clubs Logo/Dalkey RC.jpg', location: '', map: '#' },
+  { id: 'e3', type: 'ecrc_race', date: '2026-06-06', club: 'Skerries RC',        logo: 'Clubs Logo/Skerries RC.png', location: '', map: '#' },
+  { id: 'e4', type: 'ecrc_race', date: '2026-06-20', club: 'Stella Maris RC',    logo: 'Clubs Logo/Stella Maris RC.jpg', location: '', map: '#' },
+  { id: 'e5', type: 'ecrc_race', date: '2026-06-26', club: 'Bray RC',            logo: 'Clubs Logo/Bray RC.jpg', location: '', map: '#' },
+  { id: 'e6', type: 'ecrc_race', date: '2026-07-04', club: 'St. Patricks RC',    logo: 'Clubs Logo/St Pats RC.jpg', location: '', map: '#' },
+  { id: 'e7', type: 'ecrc_race', date: '2026-07-18', club: 'Fingal RC',          logo: 'Clubs Logo/Fingal RC.jpg', location: '', map: '#' },
+  { id: 'e8', type: 'ecrc_race', date: '2026-07-25', club: 'Greystones RC',      logo: 'Clubs Logo/Greystones Tc.jpg', location: '', map: '#' },
+  { id: 'e9', type: 'ecrc_race', date: '2026-08-01', club: 'Wicklow RC',         logo: 'Clubs Logo/Wicklow RC.jpg', location: '', map: '#' },
+];
+
+function getEvents() {
+  try { return JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null') || DEFAULT_EVENTS; } catch { return DEFAULT_EVENTS; }
+}
+function saveEventsData(events) { localStorage.setItem('ecrc_admin_events', JSON.stringify(events)); }
+
+let editingEventId = null;
+let activeEventsYear = null;
+
+function renderEvents() {
+  const events = getEvents();
+  const tabsEl = document.getElementById('events-year-tabs');
+
+  // Build sorted unique years (newest first)
+  const currentYear = new Date().getFullYear();
+  const yearsSet = new Set(events.map(e => new Date(e.date).getFullYear()));
+  if (!yearsSet.size) yearsSet.add(currentYear);
+  const years = Array.from(yearsSet).sort((a, b) => b - a);
+
+  // Default active year to current year if present, else newest
+  if (!activeEventsYear || !years.includes(activeEventsYear)) {
+    activeEventsYear = years.includes(currentYear) ? currentYear : years[0];
+  }
+
+  tabsEl.innerHTML = years.map(y =>
+    `<button class="res-year-btn${y === activeEventsYear ? ' active' : ''}" onclick="setEventsYear(${y}, this)">${y}</button>`
+  ).join('');
+
+  renderEventsForYear(events, activeEventsYear);
+}
+
+function setEventsYear(year, btn) {
+  activeEventsYear = year;
+  document.querySelectorAll('#events-year-tabs .res-year-btn').forEach(b => b.classList.toggle('active', b === btn));
+  renderEventsForYear(getEvents(), year);
+}
+
+function renderEventsForYear(events, year) {
+  const filtered = events.filter(e => new Date(e.date).getFullYear() === year);
+  const list = document.getElementById('events-list');
+  if (!filtered.length) { list.innerHTML = '<div class="empty-state">No events for ' + year + '.</div>'; return; }
+  const TYPE_LABELS = { ecrc_race: 'ECRC Race', charity: 'Charity Event', other: 'Other' };
+  const TYPE_COLORS = { ecrc_race: 'rgba(13,34,68,0.08)', charity: 'rgba(22,163,74,0.1)', other: 'rgba(100,116,139,0.1)' };
+  list.innerHTML = filtered.map(e => {
+    const d = new Date(e.date);
+    const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+    const typeLabel = TYPE_LABELS[e.type] || 'Other';
+    const typeBg = TYPE_COLORS[e.type] || TYPE_COLORS.other;
+    return `<div class="item-row" id="evt-row-${e.id}">
+      <img class="item-logo" src="${e.logo}" alt="${e.club}" />
+      <div class="item-info">
+        <strong>${e.club}</strong>
+        <span>${dateStr}${e.location ? ' &middot; ' + e.location : ''}</span>
+      </div>
+      <span style="font-size:0.68rem;font-weight:700;padding:3px 9px;border-radius:20px;background:${typeBg};color:var(--navy);white-space:nowrap;">${typeLabel}</span>
+      <button class="btn-secondary" onclick="editEvent('${e.id}')">&#9998; Edit</button>
+      <button class="btn-danger" onclick="removeEvent('${e.id}')">&#10005; Remove</button>
+    </div>`;
+  }).join('');
+}
+
+function editEvent(id) {
+  const events = getEvents();
+  const e = events.find(ev => ev.id === id);
+  if (!e) return;
+  editingEventId = id;
+  document.getElementById('evt-type').value = e.type || 'ecrc_race';
+  document.getElementById('evt-date').value = e.date || '';
+  document.getElementById('evt-end-date').value = e.endDate || '';
+  document.getElementById('evt-location').value = e.location || '';
+  document.getElementById('evt-map').value = (e.map && e.map !== '#') ? e.map : '';
+  // Set club select — match by club name text
+  const clubSel = document.getElementById('evt-club');
+  Array.from(clubSel.options).forEach(opt => {
+    if (opt.text === e.club) clubSel.value = opt.value;
+  });
+  document.getElementById('event-form-title').textContent = 'Edit Event';
+  document.getElementById('event-form-sub').textContent = 'Update the details below then click Save.';
+  document.getElementById('event-save-btn').textContent = '&#10003; Save Changes';
+  document.getElementById('event-save-btn').innerHTML = '&#10003; Save Changes';
+  document.getElementById('event-cancel-btn').style.display = '';
+  document.getElementById('event-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEditEvent() {
+  editingEventId = null;
+  document.getElementById('event-form-title').textContent = 'Add New Event';
+  document.getElementById('event-form-sub').textContent = 'Add a regatta or event to the calendar.';
+  document.getElementById('event-save-btn').innerHTML = '+ Add Event';
+  document.getElementById('event-cancel-btn').style.display = 'none';
+  ['evt-date','evt-end-date','evt-location','evt-map'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('evt-club').value = '';
+  document.getElementById('evt-type').value = 'ecrc_race';
+}
+
+function addEvent() {
+  const type     = document.getElementById('evt-type').value;
+  const dateVal  = document.getElementById('evt-date').value;
+  const endDate  = document.getElementById('evt-end-date').value;
+  const clubSel  = document.getElementById('evt-club');
+  const clubName = clubSel.options[clubSel.selectedIndex]?.text;
+  const logo     = clubSel.options[clubSel.selectedIndex]?.dataset.logo || 'Brand_assets/ECRC-Logo.jpg';
+  const location = document.getElementById('evt-location').value.trim();
+  const map      = document.getElementById('evt-map').value.trim() || '#';
+  if (!dateVal || !clubName || clubSel.value === '') { showToast('Please fill in date and host club', 'error'); return; }
+
+  let events = getEvents();
+
+  if (editingEventId) {
+    // Update existing event, preserve the id
+    events = events.map(e => e.id === editingEventId
+      ? { ...e, type, date: dateVal, endDate, club: clubName, logo, location, map }
+      : e);
+    events.sort((a, b) => a.date.localeCompare(b.date));
+    saveEventsData(events);
+    renderEvents();
+    cancelEditEvent();
+    showToast('Event updated');
+  } else {
+    events.push({ id: 'e' + Date.now(), type, date: dateVal, endDate, club: clubName, logo, location, map });
+    events.sort((a, b) => a.date.localeCompare(b.date));
+    saveEventsData(events);
+    renderEvents();
+    ['evt-date','evt-end-date','evt-location','evt-map'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('evt-club').value = '';
+    document.getElementById('evt-type').value = 'ecrc_race';
+    showToast('Event added');
+  }
+}
+
+function removeEvent(id) {
+  if (editingEventId === id) cancelEditEvent();
+  const events = getEvents().filter(e => e.id !== id);
+  saveEventsData(events);
+  renderEvents();
+  showToast('Event removed');
+}
+
+/* ════════════════════════════════
+   NEWS
+════════════════════════════════ */
+/* ── Shared file reader ── */
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = e => resolve(e.target.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ════════════════════════════════
+   NEWS
+════════════════════════════════ */
+function getNews() {
+  try { return JSON.parse(localStorage.getItem('ecrc_admin_news') || '[]'); } catch { return []; }
+}
+function saveNewsData(news) { localStorage.setItem('ecrc_admin_news', JSON.stringify(news)); }
+
+function renderNews() {
+  const news = getNews();
+  const list = document.getElementById('news-list');
+  if (!news.length) { list.innerHTML = '<div class="empty-state">No news posts yet. Add one below.</div>'; return; }
+  list.innerHTML = news.map(n => `<div class="item-row">
+    ${n.imageData ? `<img class="item-logo" src="${n.imageData}" style="border-radius:6px;object-fit:cover;" />` : ''}
+    <div class="item-info">
+      <strong>${n.title}</strong>
+      <span>${n.date}${n.videoUrl ? ' &middot; &#127916; Video' : ''}</span>
+    </div>
+    <button class="btn-danger" onclick="removeNews('${n.id}')">&#10005; Delete</button>
+  </div>`).join('');
+}
+
+async function addNews() {
+  const title    = document.getElementById('news-title').value.trim();
+  const date     = document.getElementById('news-date').value;
+  const body     = document.getElementById('news-body').value.trim();
+  const videoUrl = document.getElementById('news-video-url').value.trim();
+  const link     = document.getElementById('news-link').value.trim();
+  const imgFile  = document.getElementById('news-image-file').files[0];
+  if (!title || !date) { showToast('Please enter a headline and date', 'error'); return; }
+
+  let imageData = '';
+  if (imgFile) {
+    if (imgFile.size > 2 * 1024 * 1024) { showToast('Image must be under 2 MB', 'error'); return; }
+    try { imageData = await readFileAsDataURL(imgFile); } catch { showToast('Could not read image file', 'error'); return; }
+  }
+
+  const news = getNews();
+  news.unshift({ id: 'n' + Date.now(), title, date, body, imageData, videoUrl, link });
+  saveNewsData(news);
+  renderNews();
+  ['news-title','news-date','news-body','news-video-url','news-link'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('news-image-file').value = '';
+  document.getElementById('news-image-name').textContent = '';
+  showToast('News post published');
+}
+
+function removeNews(id) {
+  saveNewsData(getNews().filter(n => n.id !== id));
+  renderNews();
+  showToast('Post deleted');
+}
+
+/* ════════════════════════════════
+   RULEBOOK
+════════════════════════════════ */
+const DEFAULT_RULEBOOKS = [
+  { id: 'rb1', year: '2025', version: 'V5', filename: '2025 ECRC Rule Book V5.pdf', notes: 'Current season rulebook', current: true, dataKey: null },
+];
+
+function getRulebooks() {
+  try { return JSON.parse(localStorage.getItem('ecrc_admin_rulebooks') || 'null') || DEFAULT_RULEBOOKS; } catch { return DEFAULT_RULEBOOKS; }
+}
+function saveRulebooksData(r) { localStorage.setItem('ecrc_admin_rulebooks', JSON.stringify(r)); }
+
+function renderRulebooks() {
+  const books = getRulebooks();
+  const list  = document.getElementById('rulebook-list');
+  if (!books.length) { list.innerHTML = '<div class="empty-state">No rulebooks added.</div>'; return; }
+  list.innerHTML = books.map((b, i) => {
+    const hasPdf = !!b.dataKey && !!localStorage.getItem(b.dataKey);
+    const fallbackPath = `Rule Book/${b.filename}`;
+    const pdfSrc = hasPdf ? localStorage.getItem(b.dataKey) : fallbackPath;
+    return `<div class="rulebook-item">
+      <span class="rulebook-icon">📄</span>
+      <div class="rulebook-info">
+        <strong>${b.year} ECRC Rule Book ${b.version}</strong>
+        <span>${b.filename}${b.notes ? ' &middot; ' + b.notes : ''}</span>
+      </div>
+      ${i === 0 ? '<span class="current-badge">Current</span>' : ''}
+      <a href="${pdfSrc}" target="_blank" class="btn-secondary btn-sm">&#128065; View</a>
+      <button class="btn-danger btn-sm" onclick="removeRulebook('${b.id}')">&#10005;</button>
+    </div>`;
+  }).join('');
+}
+
+async function addRulebook() {
+  const year    = document.getElementById('rb-year').value.trim();
+  const version = document.getElementById('rb-version').value.trim();
+  const notes   = document.getElementById('rb-notes').value.trim();
+  const pdfFile = document.getElementById('rb-pdf-file').files[0];
+  if (!year || !version || !pdfFile) { showToast('Please fill in year, version and choose a PDF', 'error'); return; }
+  if (pdfFile.size > 8 * 1024 * 1024) { showToast('PDF must be under 8 MB', 'error'); return; }
+
+  showToast('Uploading PDF…');
+  let dataUrl;
+  try { dataUrl = await readFileAsDataURL(pdfFile); }
+  catch { showToast('Could not read the PDF file', 'error'); return; }
+
+  const id = 'rb' + Date.now();
+  const dataKey = 'ecrc_pdf_' + id;
+  try { localStorage.setItem(dataKey, dataUrl); }
+  catch { showToast('PDF too large for browser storage — try a smaller file', 'error'); return; }
+
+  const books = getRulebooks().map(b => ({ ...b, current: false }));
+  books.unshift({ id, year, version, filename: pdfFile.name, notes, current: true, dataKey });
+  saveRulebooksData(books);
+  renderRulebooks();
+  ['rb-year','rb-version','rb-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('rb-pdf-file').value = '';
+  document.getElementById('rb-pdf-name').textContent = '';
+  showToast('Rulebook uploaded successfully');
+}
+
+function removeRulebook(id) {
+  const books = getRulebooks();
+  const book  = books.find(b => b.id === id);
+  if (book?.dataKey) localStorage.removeItem(book.dataKey);
+  const remaining = books.filter(b => b.id !== id);
+  if (remaining.length) remaining[0].current = true;
+  saveRulebooksData(remaining);
+  renderRulebooks();
+  showToast('Rulebook removed');
+}
+
+/* ════════════════════════════════
+   ACCOUNTS
+════════════════════════════════ */
+const DEFAULT_ACCOUNTS = [
+  { id: 'a0',  name: 'ECRC Admin',      email: 'eastcoastrowingireland@gmail.com', password: '123',          role: 'admin', club: '' },
+  { id: 'ac1', name: 'Arklow RC',       email: 'arklow@ecrc.ie',                  password: 'Arklow2026',   role: 'club',  club: 'Arklow RC' },
+  { id: 'ac2', name: 'Bray RC',         email: 'bray@ecrc.ie',                    password: 'Bray2026',     role: 'club',  club: 'Bray RC' },
+  { id: 'ac3', name: 'Dalkey RC',       email: 'dalkey@ecrc.ie',                  password: 'Dalkey2026',   role: 'club',  club: 'Dalkey RC' },
+  { id: 'ac4', name: 'Fingal RC',       email: 'fingal@ecrc.ie',                  password: 'Fingal2026',   role: 'club',  club: 'Fingal RC' },
+  { id: 'ac5', name: 'Greystones RC',   email: 'greystones@ecrc.ie',              password: 'Grey2026',     role: 'club',  club: 'Greystones RC' },
+  { id: 'ac6', name: 'Skerries RC',     email: 'skerries@ecrc.ie',               password: 'Skerries2026', role: 'club',  club: 'Skerries RC' },
+  { id: 'ac7', name: "St. Michael's RC", email: 'smrc@ecrc.ie',                  password: 'SMRC2026',     role: 'club',  club: "St. Michael's RC" },
+  { id: 'ac8', name: 'St. Patricks RC', email: 'stpats@ecrc.ie',                 password: 'StPats2026',   role: 'club',  club: 'St. Patricks RC' },
+  { id: 'ac9', name: 'Stella Maris RC', email: 'stella@ecrc.ie',                 password: 'Stella2026',   role: 'club',  club: 'Stella Maris RC' },
+  { id: 'ac10',name: 'Vartry RC',       email: 'vartry@ecrc.ie',                  password: 'Vartry2026',   role: 'club',  club: 'Vartry RC' },
+  { id: 'ac11',name: 'Wicklow RC',      email: 'wicklow@ecrc.ie',                password: 'Wicklow2026',  role: 'club',  club: 'Wicklow RC' },
+];
+
+function getAccounts() {
+  try { return JSON.parse(localStorage.getItem('ecrc_admin_accounts') || 'null') || DEFAULT_ACCOUNTS; } catch { return DEFAULT_ACCOUNTS; }
+}
+function saveAccountsData(a) { localStorage.setItem('ecrc_admin_accounts', JSON.stringify(a)); }
+
+const ROLE_LABELS = { admin: 'Admin', club: 'Club', personal: 'Personal' };
+
+function renderAccounts() {
+  const accounts = getAccounts();
+  const list = document.getElementById('accounts-list');
+  list.innerHTML = accounts.length ? accounts.map(a => `
+    <div class="account-row">
+      <div class="account-avatar">${a.name.charAt(0).toUpperCase()}</div>
+      <div class="account-info">
+        <strong>${a.name}</strong>
+        <span>${a.email || '— email not set —'}${a.club ? ' &middot; ' + a.club : ''}</span>
+      </div>
+      <span class="role-badge ${a.role}">${ROLE_LABELS[a.role] || a.role}</span>
+      ${a.id === 'a0'
+        ? '<span style="font-size:0.72rem;color:var(--muted);">Default</span>'
+        : `<button class="btn-danger btn-sm" onclick="removeAccount('${a.id}')">&#10005; Remove</button>`}
+    </div>`).join('')
+    : '<div class="empty-state">No accounts found.</div>';
+}
+
+function toggleClubField() {
+  const role = document.getElementById('acc-role').value;
+  document.getElementById('acc-club-row').style.display = role === 'club' ? '' : 'none';
+}
+
+function addAccount() {
+  const name     = document.getElementById('acc-name').value.trim();
+  const email    = document.getElementById('acc-email').value.trim().toLowerCase();
+  const password = document.getElementById('acc-password').value;
+  const role     = document.getElementById('acc-role').value;
+  const club     = role === 'club' ? document.getElementById('acc-club').value : '';
+  if (!name || !email || !password) { showToast('Please fill in all fields', 'error'); return; }
+  if (role === 'club' && !club) { showToast('Please select a club', 'error'); return; }
+  const accounts = getAccounts();
+  if (accounts.find(a => a.email === email)) { showToast('An account with that email already exists', 'error'); return; }
+  accounts.push({ id: 'a' + Date.now(), name, email, password, role, club });
+  saveAccountsData(accounts);
+  renderAccounts();
+  ['acc-name','acc-email','acc-password'].forEach(id => document.getElementById(id).value = '');
+  showToast('Account created');
+}
+
+function removeAccount(id) {
+  if (id === 'a0') return;
+  saveAccountsData(getAccounts().filter(a => a.id !== id));
+  renderAccounts();
+  showToast('Account removed');
+}
+
+/* ════════════════════════════════
+   CREWS
+════════════════════════════════ */
+const ALL_CLUBS = ['Arklow RC','Bray RC','Dalkey RC','Fingal RC','Greystones RC','Skerries RC',"St. Michael's RC",'St. Patricks RC','Stella Maris RC','Vartry RC','Wicklow RC'];
+
+const CLUB_LOGOS = {
+  'Arklow RC':        'Clubs Logo/Arklow RC.jpg',
+  'Bray RC':          'Clubs Logo/Bray RC.jpg',
+  'Dalkey RC':        'Clubs Logo/Dalkey RC.jpg',
+  'Fingal RC':        'Clubs Logo/Fingal RC.jpg',
+  'Greystones RC':    'Clubs Logo/Greystones Tc.jpg',
+  'Skerries RC':      'Clubs Logo/Skerries RC.png',
+  "St. Michael's RC": 'Clubs Logo/SMRC.jpg',
+  'St. Patricks RC':  'Clubs Logo/St Pats RC.jpg',
+  'Stella Maris RC':  'Clubs Logo/Stella Maris RC.jpg',
+  'Vartry RC':        'Clubs Logo/Vartry RC.jpg',
+  'Wicklow RC':       'Clubs Logo/Wicklow RC.jpg',
+};
+
+function syncSelectLogo(sel, imgEl) {
+  const opt = sel.options[sel.selectedIndex];
+  const src = (opt && opt.dataset.logo) || CLUB_LOGOS[sel.value] || '';
+  imgEl.src = src;
+  imgEl.style.display = src ? 'inline-block' : 'none';
+}
+
+// Pastel row colours — one per club in ALL_CLUBS order
+const CLUB_COLORS = [
+  'rgba(239,68,68,0.10)',   // Arklow    — red
+  'rgba(249,115,22,0.10)',  // Bray      — orange
+  'rgba(234,179,8,0.10)',   // Dalkey    — yellow
+  'rgba(34,197,94,0.10)',   // Fingal    — green
+  'rgba(20,184,166,0.10)',  // Greystones— teal
+  'rgba(59,130,246,0.10)',  // Skerries  — blue
+  'rgba(168,85,247,0.10)',  // St. Michael's — purple
+  'rgba(236,72,153,0.10)', // St. Patricks  — pink
+  'rgba(99,102,241,0.10)', // Stella Maris  — indigo
+  'rgba(132,204,22,0.10)', // Vartry    — lime
+  'rgba(6,182,212,0.10)',  // Wicklow   — cyan
+];
+function getClubColor(club) {
+  const i = ALL_CLUBS.indexOf(club);
+  return i >= 0 ? CLUB_COLORS[i] : 'transparent';
+}
+
+function getCrews() {
+  try { return JSON.parse(localStorage.getItem('ecrc_admin_crews') || '[]'); } catch { return []; }
+}
+function saveCrewsData(c) { localStorage.setItem('ecrc_admin_crews', JSON.stringify(c)); }
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let crewCurrentYear = String(new Date().getFullYear());
+let crewCurrentRegattaId = '';
+let crewCurrentRegattaName = '';
+
+function initCrewsTab() {
+  crewCurrentYear = String(new Date().getFullYear());
+  document.getElementById('crew-year').value = crewCurrentYear;
+
+  if (userRole === 'club') {
+    const row = document.getElementById('crew-ov-filter-row');
+    if (row) row.style.display = 'none';
+  } else {
+    const sel = document.getElementById('ov-filter-club');
+    if (sel) sel.innerHTML = '<option value="">All Clubs</option>' + ALL_CLUBS.map(c => `<option>${escHtml(c)}</option>`).join('');
+  }
+
+  buildCrewRegattaSelect();
+}
+
+function clearAllCrewsForRegatta() {
+  if (userRole !== 'admin') return;
+  if (!crewCurrentRegattaId) { showToast('No regatta selected', 'error'); return; }
+  if (!confirm(`Delete ALL crew entries for this regatta (${crewCurrentRegattaName || crewCurrentRegattaId})? This cannot be undone.`)) return;
+  const remaining = getCrews().filter(c =>
+    !(c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId)
+  );
+  saveCrewsData(remaining);
+  renderOverview();
+  renderDrawSheet();
+  renderSubmitTable();
+  showToast('All crews cleared for this regatta');
+}
+
+function showCrewSubtab(name, btn) {
+  document.getElementById('crew-panel-overview').style.display = name === 'overview' ? '' : 'none';
+  document.getElementById('crew-panel-draw').style.display     = name === 'draw'     ? '' : 'none';
+  document.getElementById('crew-panel-submit').style.display   = name === 'submit'   ? '' : 'none';
+  document.querySelectorAll('.crew-subtab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function onCrewYearChange() {
+  crewCurrentYear = document.getElementById('crew-year').value;
+  buildCrewRegattaSelect();
+}
+
+function buildCrewRegattaSelect() {
+  const regattas = getRegattasForYear(parseInt(crewCurrentYear));
+  const sel = document.getElementById('crew-regatta-select');
+  if (!sel) return;
+  sel.innerHTML = regattas.length
+    ? regattas.map(r => `<option value="${escHtml(r.id)}">${escHtml(r.name)}</option>`).join('')
+    : '<option value="">No regattas for this year</option>';
+  onCrewRegattaChange();
+}
+
+/* Submit draft state — reset on regatta change */
+let submitExtraRows = {}; // { club: N } extra blank crew rows added this session
+let submitExtraCats = []; // extra category columns added this session
+let submitDraftData = {}; // { 'club|N|cat': {rowers,cox,id} } unsaved edits
+
+function captureSubmitDraft() {
+  document.querySelectorAll('#submit-panel-content td.submit-cell').forEach(cell => {
+    const key = `${cell.dataset.club}|${cell.dataset.crewNum}|${cell.dataset.cat}`;
+    const inputs = cell.querySelectorAll('input');
+    submitDraftData[key] = {
+      rowers: [inputs[0]?.value||'',inputs[1]?.value||'',inputs[2]?.value||'',inputs[3]?.value||''],
+      cox: inputs[4]?.value || '',
+      id: cell.dataset.entryId || ''
+    };
+  });
+}
+
+function addSubmitCrew(club) {
+  captureSubmitDraft();
+  submitExtraRows[club] = (submitExtraRows[club] || 0) + 1;
+  renderSubmitTable();
+}
+
+function addSubmitCategory() {
+  const sel = document.getElementById('submit-new-cat-sel');
+  if (!sel || !sel.value) return;
+  captureSubmitDraft();
+  if (!submitExtraCats.includes(sel.value)) submitExtraCats.push(sel.value);
+  renderSubmitTable();
+}
+
+function isDrawLocked() {
+  if (isCrewExplicitlyLocked()) return true;
+  const all = getCrews().filter(c => c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId);
+  const ld  = getLaneData();
+  return all.some(c => ld[c.id]);
+}
+
+function onCrewRegattaChange() {
+  const sel = document.getElementById('crew-regatta-select');
+  if (!sel) return;
+  crewCurrentRegattaId   = sel.value;
+  crewCurrentRegattaName = sel.options[sel.selectedIndex]?.text || '';
+  submitExtraRows = {}; submitExtraCats = []; submitDraftData = {};
+  renderOverview();
+  renderDrawSheet();
+  renderSubmitTable();
+}
+
+function getCrewsForRegatta() {
+  let crews = getCrews().filter(c => c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId);
+  if (userRole === 'club') crews = crews.filter(c => c.club === userClub);
+  return crews;
+}
+
+/* ─── Overview (matrix: clubs as rows, categories as columns) ─── */
+function renderOverview() {
+  const el = document.getElementById('crews-overview-content');
+  if (!el) return;
+
+  const allForRegatta = getCrews().filter(c =>
+    c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId
+  );
+
+  const filterClub = (document.getElementById('ov-filter-club') || {}).value || '';
+  const viewCrews = userRole === 'club'
+    ? allForRegatta.filter(c => c.club === userClub)
+    : (filterClub ? allForRegatta.filter(c => c.club === filterClub) : allForRegatta);
+
+  if (!viewCrews.length) {
+    el.innerHTML = '<div class="empty-state">No crews have been submitted for this regatta yet.</div>';
+    return;
+  }
+
+  // Columns = only categories that have at least one submission (preserve CATEGORIES order)
+  const usedCats = CATEGORIES.filter(cat => allForRegatta.some(c => c.category === cat));
+
+  // Duplicate rower detection across different categories (cox excluded)
+  const rowerCats = {};
+  allForRegatta.forEach(c => {
+    c.rowers.forEach(r => {
+      const key = r.trim().toLowerCase();
+      if (!key) return;
+      if (!rowerCats[key]) rowerCats[key] = new Set();
+      rowerCats[key].add(c.category);
+    });
+  });
+  const dupNames = new Set(
+    Object.entries(rowerCats).filter(([, cats]) => cats.size > 1).map(([k]) => k)
+  );
+
+  // Build rows: club alphabetical, crew number assigned in category order within each club
+  const catOrder = Object.fromEntries(CATEGORIES.map((c, i) => [c, i]));
+  const clubs = [...new Set(viewCrews.map(c => c.club))].sort();
+
+  // Build matrix: one row per (club, crewNumber).
+  // Each club gets max(entries per category) rows.
+  // Row N shows Crew N data for every category where that club has a Crew N.
+  const matrixRows = [];
+  clubs.forEach(club => {
+    // Group entries by category (order within category = submission order)
+    const catMap = {};
+    viewCrews.filter(c => c.club === club).forEach(entry => {
+      if (!catMap[entry.category]) catMap[entry.category] = [];
+      catMap[entry.category].push(entry);
+    });
+
+    const maxCrews = Math.max(0, ...Object.values(catMap).map(arr => arr.length));
+    for (let n = 1; n <= maxCrews; n++) {
+      const rowEntries = {}; // category -> entry for Crew N
+      Object.entries(catMap).forEach(([cat, entries]) => {
+        if (entries[n - 1]) rowEntries[cat] = entries[n - 1];
+      });
+      matrixRows.push({ club, crewNum: n, rowEntries });
+    }
+  });
+
+  const locked  = isDrawLocked();
+  const canEdit = !locked || userRole === 'admin';
+
+  // Cell content
+  function cellHtml(entry) {
+    const tags = entry.rowers.map(r => {
+      if (!r.trim()) return '';
+      const dup = dupNames.has(r.trim().toLowerCase());
+      return `<span class="ov-rower-tag${dup ? ' ov-dup-tag' : ''}">${escHtml(r)}</span>`;
+    }).filter(Boolean).join('');
+    const cox = entry.cox ? `<span class="ov-cox-tag">Cox: ${escHtml(entry.cox)}</span>` : '';
+    const del = canEdit
+      ? `<button class="btn-danger btn-sm" style="margin-top:4px;padding:1px 7px;" onclick="removeCrewEntry('${entry.id}')">&#10005;</button>`
+      : '';
+    return tags + cox + del;
+  }
+
+  const headerCells = usedCats.map(cat => {
+    const count = allForRegatta.filter(c => c.category === cat).length;
+    return `<th class="ov-matrix-col">
+      <span style="display:block;font-size:1.1rem;font-weight:900;font-family:'Merriweather',serif;color:var(--navy);letter-spacing:normal;text-transform:none;line-height:1;margin-bottom:4px;">${count}</span>
+      ${escHtml(cat)}
+    </th>`;
+  }).join('');
+
+  const bodyRows = matrixRows.map(row => {
+    const bg = getClubColor(row.club);
+    const dataCells = usedCats.map(cat =>
+      row.rowEntries[cat]
+        ? `<td class="ov-matrix-cell" style="background:${bg};">${cellHtml(row.rowEntries[cat])}</td>`
+        : `<td class="ov-matrix-empty" style="background:${bg};"></td>`
+    ).join('');
+
+    return `<tr>
+      <td class="ov-row-label" style="background:${bg};">
+        <span>${escHtml(row.club)}</span>
+        <span class="ov-crew-num">Crew ${row.crewNum}</span>
+      </td>
+      ${dataCells}
+    </tr>`;
+  }).join('');
+
+  const totalEntries = viewCrews.length;
+  const totalClubs   = clubs.length;
+
+  const ovLockBanner = locked
+    ? (isCrewExplicitlyLocked()
+        ? `<div class="lock-banner" style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.25);margin-bottom:16px;">
+            <span style="font-size:1.3rem;">&#128274;</span>
+            <div><strong style="font-size:0.85rem;color:#991b1b;">Crew submissions locked</strong>
+            <p style="font-size:0.75rem;color:#991b1b;margin-top:2px;">This regatta is locked. ${userRole === 'admin' ? 'Use <em>Unlock Crews</em> on the Draw Sheet to re-open.' : 'Contact ECRC admin to make changes.'}</p></div>
+          </div>`
+        : `<div class="lock-banner" style="background:rgba(200,153,42,0.06);border:1px solid rgba(200,153,42,0.3);margin-bottom:16px;">
+            <span style="font-size:1.3rem;">&#128275;</span>
+            <div><strong style="font-size:0.85rem;color:var(--navy);">Lane draws in progress — submissions locked</strong>
+            <p style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Crew entries are frozen while lanes are assigned. ${userRole === 'admin' ? 'Reset lanes on the Draw Sheet to unlock.' : ''}</p></div>
+          </div>`)
+    : '';
+
+  el.innerHTML = `
+    ${ovLockBanner}
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+      <div style="background:var(--off-white);border:1px solid var(--border);border-radius:10px;padding:12px 20px;display:flex;flex-direction:column;gap:2px;">
+        <span style="font-size:1.4rem;font-weight:900;font-family:'Merriweather',serif;color:var(--navy);line-height:1;">${totalEntries}</span>
+        <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);">Total Crews</span>
+      </div>
+      <div style="background:var(--off-white);border:1px solid var(--border);border-radius:10px;padding:12px 20px;display:flex;flex-direction:column;gap:2px;">
+        <span style="font-size:1.4rem;font-weight:900;font-family:'Merriweather',serif;color:var(--navy);line-height:1;">${totalClubs}</span>
+        <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);">Clubs Entered</span>
+      </div>
+      <div style="background:var(--off-white);border:1px solid var(--border);border-radius:10px;padding:12px 20px;display:flex;flex-direction:column;gap:2px;">
+        <span style="font-size:1.4rem;font-weight:900;font-family:'Merriweather',serif;color:var(--navy);line-height:1;">${usedCats.length}</span>
+        <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);">Race Categories</span>
+      </div>
+      ${dupNames.size ? `<div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:10px;padding:12px 20px;display:flex;flex-direction:column;gap:2px;">
+        <span style="font-size:1.4rem;font-weight:900;font-family:'Merriweather',serif;color:var(--danger);line-height:1;">${dupNames.size}</span>
+        <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--danger);">Duplicate Rowers</span>
+      </div>` : ''}
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="btn-secondary" onclick="downloadCrewsCSV()" style="font-size:0.78rem;">&#8659; Download Excel (CSV)</button>
+      <button class="btn-secondary" onclick="window.print()" style="font-size:0.78rem;">&#128438; Print / Save PDF</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="ov-matrix-table">
+        <thead>
+          <tr>
+            <th class="ov-matrix-first">Club</th>
+            ${headerCells}
+          </tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>
+    ${dupNames.size ? `<div class="dup-warning" style="margin-top:12px;">&#9888; <strong>${dupNames.size} rower${dupNames.size !== 1 ? 's' : ''}</strong> flagged across multiple race categories (shown in red). Cox duplicates are permitted.</div>` : ''}
+  `;
+}
+
+function removeCrewEntry(id) {
+  if (isDrawLocked() && userRole !== 'admin') { showToast('Crew submissions are locked', 'error'); return; }
+  saveCrewsData(getCrews().filter(c => c.id !== id));
+  renderOverview();
+  renderSubmitTable();
+  showToast('Crew entry removed');
+}
+
+function downloadCrewsCSV() {
+  const all = getCrews().filter(c => c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId);
+  if (!all.length) { showToast('No data to export', 'error'); return; }
+
+  const usedCats = CATEGORIES.filter(cat => all.some(c => c.category === cat));
+  const clubs    = [...new Set(all.map(c => c.club))].sort();
+  const q = s => `"${String(s || '').replace(/"/g, '""')}"`;
+
+  const lines = [['Club','Crew',...usedCats].map(q).join(',')];
+
+  clubs.forEach(club => {
+    const catMap = {};
+    all.filter(c => c.club === club).forEach(e => {
+      if (!catMap[e.category]) catMap[e.category] = [];
+      catMap[e.category].push(e);
+    });
+    const maxN = Math.max(0, ...Object.values(catMap).map(a => a.length));
+    for (let n = 1; n <= maxN; n++) {
+      const row = [q(club), q(`Crew ${n}`)];
+      usedCats.forEach(cat => {
+        const e = catMap[cat]?.[n - 1];
+        row.push(e ? q(e.rowers.filter(r=>r).join(', ') + (e.cox ? ` | Cox: ${e.cox}` : '')) : '""');
+      });
+      lines.push(row.join(','));
+    }
+  });
+
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href: url,
+    download: `ECRC-Crews-${(crewCurrentRegattaName||crewCurrentRegattaId).replace(/[^a-zA-Z0-9]/g,'-')}-${crewCurrentYear}.csv`
+  });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ─── Lane draw storage ─── */
+function getLaneData() {
+  try { return JSON.parse(localStorage.getItem('ecrc_admin_lanes') || '{}'); } catch { return {}; }
+}
+function saveLaneData(d) { localStorage.setItem('ecrc_admin_lanes', JSON.stringify(d)); }
+
+function laneStartKey() { return `ecrc_lane_starts_${crewCurrentYear}_${crewCurrentRegattaId}`; }
+function getLaneStarts() { try { return JSON.parse(localStorage.getItem(laneStartKey()) || '{}'); } catch { return {}; } }
+function saveLaneStart(category, val) {
+  const d = getLaneStarts();
+  d[category] = Math.max(1, parseInt(val) || 1);
+  localStorage.setItem(laneStartKey(), JSON.stringify(d));
+}
+
+/* ─── Explicit crew lock (independent of lane draws) ─── */
+function crewLockKey() { return `ecrc_crew_lock_${crewCurrentYear}_${crewCurrentRegattaId}`; }
+function isCrewExplicitlyLocked() { return localStorage.getItem(crewLockKey()) === '1'; }
+function toggleCrewLock() {
+  if (userRole !== 'admin') return;
+  if (isCrewExplicitlyLocked()) {
+    localStorage.removeItem(crewLockKey());
+    showToast('Crew submissions unlocked');
+  } else {
+    localStorage.setItem(crewLockKey(), '1');
+    showToast('Crew submissions locked');
+  }
+  renderOverview();
+  renderDrawSheet();
+  renderSubmitTable();
+}
+
+function drawLanes(category) {
+  const starts    = getLaneStarts();
+  const startLane = starts[category] || 1;
+  const entries   = getCrews().filter(c =>
+    c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId && c.category === category
+  );
+  if (!entries.length) return;
+  // Fisher-Yates shuffle starting at startLane
+  const nums = Array.from({ length: entries.length }, (_, i) => i + startLane);
+  for (let i = nums.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [nums[i], nums[j]] = [nums[j], nums[i]];
+  }
+  const laneData = getLaneData();
+  entries.forEach((e, i) => { laneData[e.id] = nums[i]; });
+  saveLaneData(laneData);
+  renderOverview();
+  renderDrawSheet();
+  renderSubmitTable();
+  showToast(`Lanes drawn for ${category} (starting lane ${startLane})`);
+}
+
+function drawAllLanes() {
+  if (userRole !== 'admin') return;
+  const all = getCrews().filter(c => c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId);
+  if (!all.length) { showToast('No crews to draw', 'error'); return; }
+  const usedCats  = CATEGORIES.filter(cat => all.some(c => c.category === cat));
+  const laneStarts = getLaneStarts();
+  const laneData  = getLaneData();
+  usedCats.forEach(cat => {
+    const entries   = all.filter(c => c.category === cat);
+    const startLane = laneStarts[cat] || 1;
+    const nums = Array.from({ length: entries.length }, (_, i) => i + startLane);
+    for (let i = nums.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [nums[i], nums[j]] = [nums[j], nums[i]];
+    }
+    entries.forEach((e, i) => { laneData[e.id] = nums[i]; });
+  });
+  saveLaneData(laneData);
+  renderOverview();
+  renderDrawSheet();
+  renderSubmitTable();
+  showToast(`All lanes drawn across ${usedCats.length} categor${usedCats.length !== 1 ? 'ies' : 'y'}`);
+}
+
+function resetLanes() {
+  if (userRole !== 'admin') return;
+  const all = getCrews().filter(c => c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId);
+  const laneData = getLaneData();
+  all.forEach(c => delete laneData[c.id]);
+  saveLaneData(laneData);
+  renderOverview();
+  renderDrawSheet();
+  renderSubmitTable();
+  showToast('All lane draws reset');
+}
+
+/* ─── Draw Sheet (matrix) ─── */
+function renderDrawSheet() {
+  const el = document.getElementById('crews-draw-content');
+  if (!el) return;
+
+  const all = getCrews().filter(c =>
+    c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId
+  );
+
+  if (!all.length) {
+    el.innerHTML = '<div class="empty-state">No crews have been submitted for this regatta yet.</div>';
+    return;
+  }
+
+  const usedCats  = CATEGORIES.filter(cat => all.some(c => c.category === cat));
+  const laneData  = getLaneData();
+  const laneStarts = getLaneStarts();
+  const clubs     = [...new Set(all.map(c => c.club))].sort();
+
+  // Same pivot as Overview: one row per (club, crewNum), columns = categories
+  const matrixRows = [];
+  clubs.forEach(club => {
+    const catMap = {};
+    all.filter(c => c.club === club).forEach(entry => {
+      if (!catMap[entry.category]) catMap[entry.category] = [];
+      catMap[entry.category].push(entry);
+    });
+    const maxCrews = Math.max(0, ...Object.values(catMap).map(arr => arr.length));
+    for (let n = 1; n <= maxCrews; n++) {
+      const rowEntries = {};
+      Object.entries(catMap).forEach(([cat, entries]) => {
+        if (entries[n - 1]) rowEntries[cat] = entries[n - 1];
+      });
+      matrixRows.push({ club, crewNum: n, rowEntries });
+    }
+  });
+
+  // Header row 1 — lane start inputs
+  const laneInputRow = usedCats.map(cat => {
+    const startVal = laneStarts[cat] || 1;
+    const sid = 'ls_' + cat.replace(/[^a-zA-Z0-9]/g, '_');
+    return `<td class="draw-lane-start-row">
+      <span class="draw-lane-input-label">Lane start</span>
+      <input type="number" id="${sid}" value="${startVal}" min="1" max="99"
+        class="draw-lane-input" onchange="saveLaneStart('${escHtml(cat)}', this.value)" />
+    </td>`;
+  }).join('');
+
+  // Header row 2 — category name + count + draw button
+  const catHeaderRow = usedCats.map(cat => {
+    const count = all.filter(c => c.category === cat).length;
+    const allDone = all.filter(c => c.category === cat).every(c => laneData[c.id]);
+    return `<th class="draw-cat-header-cell">
+      <div style="font-size:1rem;font-weight:900;font-family:'Merriweather',serif;line-height:1;margin-bottom:3px;">${count}</div>
+      <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.05em;margin-bottom:6px;white-space:normal;">${escHtml(cat)}</div>
+      <button class="crew-add-btn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.28);color:#fff;font-size:0.65rem;" onclick="drawLanes('${escHtml(cat)}')">
+        &#127922; ${allDone ? 'Redraw' : 'Draw'}
+      </button>
+    </th>`;
+  }).join('');
+
+  // Body rows
+  const bodyRows = matrixRows.map(row => {
+    const bg = getClubColor(row.club);
+    const cells = usedCats.map(cat => {
+      const entry = row.rowEntries[cat];
+      if (!entry) return `<td class="draw-empty-cell" style="background:${bg};"></td>`;
+      const lane = laneData[entry.id];
+      return `<td class="draw-result-cell" style="background:${bg};">
+        ${lane ? `<span class="draw-lane-num">${lane}</span>` : '<span class="draw-x">&#10005;</span>'}
+      </td>`;
+    }).join('');
+
+    return `<tr>
+      <td class="draw-row-label" style="background:${bg};">
+        <strong>${escHtml(row.club)}</strong>
+        <span class="ov-crew-num">Crew ${row.crewNum}</span>
+      </td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  const explicitLocked = isCrewExplicitlyLocked();
+  const anyLaneDrawn   = all.some(c => laneData[c.id]);
+
+  const adminBtns = userRole === 'admin' ? `
+    <button class="btn-primary" onclick="drawAllLanes()" style="font-size:0.78rem;background:var(--navy);border-color:var(--navy);">&#127922; Draw All</button>
+    <button class="${explicitLocked ? 'btn-danger' : 'btn-secondary'}" onclick="toggleCrewLock()" style="font-size:0.78rem;">
+      ${explicitLocked ? '&#128274; Unlock Crews' : '&#128275; Lock Crews'}
+    </button>
+    <button class="btn-danger btn-sm" onclick="resetLanes()" style="font-size:0.78rem;">&#8635; Reset All Lanes</button>
+  ` : '';
+
+  const lockBanner = explicitLocked ? `
+    <div class="lock-banner" style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.25);margin-bottom:14px;">
+      <span style="font-size:1.3rem;">&#128274;</span>
+      <div>
+        <strong style="font-size:0.85rem;color:#991b1b;">Crew submissions locked</strong>
+        <p style="font-size:0.75rem;color:#991b1b;margin-top:2px;">Clubs cannot add or edit crews. ${userRole === 'admin' ? 'Click <em>Unlock Crews</em> to re-open submissions.' : 'Contact ECRC admin.'}</p>
+      </div>
+    </div>` : (anyLaneDrawn ? `
+    <div class="lock-banner" style="background:rgba(200,153,42,0.06);border:1px solid rgba(200,153,42,0.3);margin-bottom:14px;">
+      <span style="font-size:1.3rem;">&#128275;</span>
+      <div>
+        <strong style="font-size:0.85rem;color:var(--navy);">Lanes drawn — submissions auto-locked</strong>
+        <p style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Crew entries are locked because lanes have been assigned. ${userRole === 'admin' ? 'Use <em>Lock Crews</em> to manually control the lock, or <em>Reset All Lanes</em> to reopen.' : ''}</p>
+      </div>
+    </div>` : '');
+
+  el.innerHTML = `
+    ${lockBanner}
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <button class="btn-secondary" onclick="downloadDrawSheetCSV()" style="font-size:0.78rem;">&#8659; Download CSV</button>
+      <button class="btn-secondary" onclick="window.print()" style="font-size:0.78rem;">&#128438; Print / PDF</button>
+      ${adminBtns}
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="draw-matrix-table">
+        <thead>
+          <tr class="draw-lane-start-row">
+            <td rowspan="2" class="draw-club-col">Club</td>
+            ${laneInputRow}
+          </tr>
+          <tr>${catHeaderRow}</tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function downloadDrawSheetCSV() {
+  const all = getCrews().filter(c => c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId);
+  if (!all.length) { showToast('No data to export', 'error'); return; }
+
+  const usedCats = CATEGORIES.filter(cat => all.some(c => c.category === cat));
+  const laneData = getLaneData();
+  const catOrder = Object.fromEntries(CATEGORIES.map((c, i) => [c, i]));
+  const clubs    = [...new Set(all.map(c => c.club))].sort();
+  const q = s => `"${String(s || '').replace(/"/g, '""')}"`;
+
+  const lines = [['Club', 'Crew', ...usedCats].map(q).join(',')];
+  clubs.forEach(club => {
+    const catMap = {};
+    all.filter(c => c.club === club).forEach(e => {
+      if (!catMap[e.category]) catMap[e.category] = [];
+      catMap[e.category].push(e);
+    });
+    const maxN = Math.max(0, ...Object.values(catMap).map(a => a.length));
+    for (let n = 1; n <= maxN; n++) {
+      const cells = usedCats.map(cat => {
+        const e = catMap[cat]?.[n - 1];
+        return e ? q(laneData[e.id] || 'X') : '""';
+      });
+      lines.push([q(club), q(`Crew ${n}`), ...cells].join(','));
+    }
+  });
+
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href: url,
+    download: `ECRC-DrawSheet-${(crewCurrentRegattaName||crewCurrentRegattaId).replace(/[^a-zA-Z0-9]/g,'-')}-${crewCurrentYear}.csv`
+  });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ─── Submit Table (matrix layout, same pivot as Overview) ─── */
+function renderSubmitTable() {
+  const el = document.getElementById('submit-panel-content');
+  if (!el) return;
+
+  if (!crewCurrentRegattaId) {
+    el.innerHTML = '<div class="empty-state">Please select a regatta above.</div>';
+    return;
+  }
+
+  const allForRegatta = getCrews().filter(c =>
+    c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId
+  );
+
+  // Active categories (with entries) + any extra columns added this session
+  const activeCats = CATEGORIES.filter(cat => allForRegatta.some(c => c.category === cat));
+  const usedCats   = [...new Set([...activeCats, ...submitExtraCats])];
+
+  // Clubs scope
+  const clubs = userRole === 'club' ? [userClub] : ALL_CLUBS;
+
+  // Lock check — respects both explicit lock and auto-lock from lane draws
+  const locked      = isDrawLocked();
+  const explicitLk  = isCrewExplicitlyLocked();
+  const canEdit     = !locked || userRole === 'admin';
+
+  let lockBannerHtml = '';
+  if (locked) {
+    if (userRole === 'admin') {
+      const msg = explicitLk
+        ? 'Crew submissions are explicitly locked. Use <em>Unlock Crews</em> on the Draw Sheet to re-open.'
+        : 'Lanes have been assigned — submissions are auto-locked. Reset lanes to reopen.';
+      lockBannerHtml = `<div class="lock-banner" style="background:rgba(200,153,42,0.06);border:1px solid rgba(200,153,42,0.3);">
+        <span style="font-size:1.3rem;">${explicitLk ? '&#128274;' : '&#128275;'}</span>
+        <div><strong style="font-size:0.85rem;color:var(--navy);">${explicitLk ? 'Crew submissions locked' : 'Lane draws in progress'}</strong>
+        <p style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${msg}</p></div>
+      </div>`;
+    } else {
+      lockBannerHtml = `<div class="lock-banner" style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);">
+        <span style="font-size:1.3rem;">&#128274;</span>
+        <div><strong style="font-size:0.85rem;color:#991b1b;">Crew submissions locked</strong>
+        <p style="font-size:0.75rem;color:#991b1b;margin-top:2px;">${explicitLk ? 'This regatta is locked by ECRC admin.' : 'Lane draws are in progress.'} Contact ECRC admin to make changes.</p></div>
+      </div>`;
+    }
+  }
+
+  // "Add category" column in the header
+  const availCats = CATEGORIES.filter(c => !usedCats.includes(c));
+  const addCatTh  = (canEdit && availCats.length) ? `
+    <th class="ov-matrix-col" style="min-width:170px;vertical-align:middle;">
+      <span style="display:block;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:5px;">Add Category</span>
+      <select id="submit-new-cat-sel" style="width:100%;font-size:0.72rem;padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-family:'Inter',sans-serif;margin-bottom:4px;">
+        <option value="">Choose…</option>
+        ${availCats.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('')}
+      </select>
+      <button class="crew-add-btn" style="font-size:0.65rem;width:100%;justify-content:center;" onclick="addSubmitCategory()">+ Add Column</button>
+    </th>` : '';
+
+  // Count per category
+  const headerCells = usedCats.map(cat => {
+    const count = allForRegatta.filter(c => c.category === cat).length;
+    return `<th class="ov-matrix-col" style="min-width:150px;">
+      ${count ? `<span style="display:block;font-size:1rem;font-weight:900;font-family:'Merriweather',serif;color:var(--navy);letter-spacing:normal;text-transform:none;line-height:1;margin-bottom:4px;">${count}</span>` : ''}
+      ${escHtml(cat)}
+    </th>`;
+  }).join('');
+
+  // Build body: one section per club
+  let bodyHtml = '';
+  clubs.forEach(club => {
+    const clubEntries = allForRegatta.filter(c => c.club === club);
+    const bg      = getClubColor(club);
+    const logoSrc = CLUB_LOGOS[club] || '';
+
+    const catMap = {};
+    clubEntries.forEach(e => {
+      if (!catMap[e.category]) catMap[e.category] = [];
+      catMap[e.category].push(e);
+    });
+
+    const maxFromData   = Math.max(0, ...Object.values(catMap).map(a => a.length));
+    const totalRows     = Math.max(1, maxFromData + (submitExtraRows[club] || 0));
+
+    for (let n = 1; n <= totalRows; n++) {
+      const rowEntries = {};
+      Object.entries(catMap).forEach(([cat, entries]) => {
+        if (entries[n - 1]) rowEntries[cat] = entries[n - 1];
+      });
+
+      const cells = usedCats.map(cat => {
+        const draftKey = `${club}|${n}|${cat}`;
+        const draft    = submitDraftData[draftKey];
+        const entry    = rowEntries[cat];
+        const rowers   = draft ? draft.rowers : (entry ? entry.rowers : ['','','','']);
+        const cox      = draft !== undefined ? draft.cox : (entry ? entry.cox : '');
+        const entryId  = entry ? entry.id : '';
+
+        if (!canEdit) {
+          const hasContent = rowers.some(r => r) || cox;
+          if (!hasContent) return `<td class="ov-matrix-empty" style="background:${bg};"></td>`;
+          const tags   = rowers.filter(r => r).map(r => `<span class="ov-rower-tag">${escHtml(r)}</span>`).join('');
+          const coxTag = cox ? `<span class="ov-cox-tag">Cox: ${escHtml(cox)}</span>` : '';
+          return `<td class="ov-matrix-cell" style="background:${bg};">${tags}${coxTag}</td>`;
+        }
+
+        return `<td class="submit-cell" style="background:${bg};"
+          data-cat="${escHtml(cat)}" data-club="${escHtml(club)}" data-crew-num="${n}" data-entry-id="${escHtml(entryId)}">
+          <input type="text" placeholder="Rower 1" value="${escHtml(rowers[0]||'')}" />
+          <input type="text" placeholder="Rower 2" value="${escHtml(rowers[1]||'')}" />
+          <input type="text" placeholder="Rower 3" value="${escHtml(rowers[2]||'')}" />
+          <input type="text" placeholder="Rower 4" value="${escHtml(rowers[3]||'')}" />
+          <input type="text" placeholder="Cox"     value="${escHtml(cox)}" class="cox-input" />
+        </td>`;
+      }).join('');
+
+      const logoImg = logoSrc ? `<img src="${logoSrc}" style="width:18px;height:18px;border-radius:3px;object-fit:contain;display:inline-block;vertical-align:middle;margin-right:5px;flex-shrink:0;" />` : '';
+      bodyHtml += `<tr>
+        <td class="ov-row-label" style="background:${bg};padding:6px 10px;">
+          ${logoImg}<span>${escHtml(club)}</span>
+          <span class="ov-crew-num">Crew ${n}</span>
+        </td>
+        ${cells}
+      </tr>`;
+    }
+
+    // "Add Crew" row per club (editable mode only)
+    if (canEdit) {
+      bodyHtml += `<tr class="submit-add-crew-tr">
+        <td colspan="${usedCats.length + 1 + (addCatTh ? 1 : 0)}" style="background:${bg};border-bottom:2px solid var(--border);padding:5px 10px;">
+          <button class="crew-add-btn" onclick="addSubmitCrew('${escHtml(club)}')">+ Add Crew for ${escHtml(club)}</button>
+        </td>
+      </tr>`;
+    }
+  });
+
+  const saveRow = canEdit ? `
+    <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <button class="btn-primary" onclick="saveAllCrews()">&#10003; Save All Crews</button>
+      ${userRole === 'admin' ? `<button class="btn-danger" onclick="clearAllCrewsForRegatta()">&#128465; Clear All Crews for This Regatta</button>` : ''}
+      <span style="font-size:0.75rem;color:var(--muted);">Empty cells are ignored. Cox duplicates are permitted.</span>
+    </div>` : '';
+
+  el.innerHTML = `
+    ${lockBannerHtml}
+    <div style="overflow-x:auto;">
+      <table class="ov-matrix-table">
+        <thead>
+          <tr>
+            <th class="ov-matrix-first">Club</th>
+            ${headerCells}
+            ${addCatTh}
+          </tr>
+        </thead>
+        <tbody>${bodyHtml}</tbody>
+      </table>
+    </div>
+    ${saveRow}
+  `;
+}
+
+function saveAllCrews() {
+  if (!crewCurrentRegattaId) { showToast('Please select a regatta first', 'error'); return; }
+  if (isDrawLocked() && userRole !== 'admin') { showToast('Crew submissions are locked', 'error'); return; }
+
+  const newEntries = [];
+  document.querySelectorAll('#submit-panel-content td.submit-cell').forEach(cell => {
+    const cat     = cell.dataset.cat;
+    const club    = cell.dataset.club;
+    const entryId = cell.dataset.entryId;
+    const inputs  = cell.querySelectorAll('input');
+    const rowers  = Array.from(inputs).slice(0, 4).map(i => i.value.trim());
+    const cox     = inputs[4]?.value.trim() || '';
+    if (!rowers.some(r => r) && !cox) return;
+    if (!club || !cat) return;
+    newEntries.push({
+      id: entryId || ('crew' + Date.now() + '_' + Math.random().toString(36).slice(2, 5)),
+      year: crewCurrentYear, regattaId: crewCurrentRegattaId,
+      regattaName: crewCurrentRegattaName,
+      club, category: cat, rowers, cox, submittedBy: auth.email
+    });
+  });
+
+  const kept = getCrews().filter(c => {
+    if (c.year !== crewCurrentYear || c.regattaId !== crewCurrentRegattaId) return true;
+    if (userRole === 'club' && c.club !== userClub) return true;
+    return false;
+  });
+  saveCrewsData(kept.concat(newEntries));
+
+  // Keep extra cats that now have data; clear draft and extra rows
+  submitDraftData  = {};
+  submitExtraRows  = {};
+  submitExtraCats  = submitExtraCats.filter(cat => newEntries.some(e => e.category === cat));
+
+  renderSubmitTable();
+  renderOverview();
+  renderDrawSheet();
+  showToast(`Saved — ${newEntries.length} crew entr${newEntries.length !== 1 ? 'ies' : 'y'}`);
+}
+
+/* ── Init ── */
+// Default tab based on role
+if (userRole === 'club' || userRole === 'personal') {
+  const crewBtn = document.querySelector('.nav-btn[data-roles="admin,club"]');
+  showTab('crews', crewBtn);
+} else {
+  const resultsBtn = document.querySelector('.nav-btn[data-roles="admin"]');
+  showTab('results', resultsBtn);
+  buildRegattaSelect();
+  loadResultsTable();
+  renderEvents();
+  renderNews();
+  renderRulebooks();
+  renderAccounts();
+}
+
+initCrewsTab();
+
+// Set today's date as default for news date
+const today = new Date().toISOString().split('T')[0];
+if (document.getElementById('news-date')) document.getElementById('news-date').value = today;
+</script>
+
+</body>
+</html>

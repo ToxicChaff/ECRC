@@ -11,12 +11,6 @@
 </head>
 <body>
 
-  <!-- Facebook Page Plugin SDK -->
-  <div id="fb-root"></div>
-  <script async defer crossorigin="anonymous"
-    src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v20.0">
-  </script>
-
   <!-- ── nav ── -->
 
 <!-- Top bar -->
@@ -95,97 +89,84 @@
 
   <!-- ── news ── -->
 
-<!-- News / Social Feed -->
-<section class="social-section" id="news">
+<!-- News & Updates -->
+<section class="news-section" id="news">
   <div class="container">
+
     <div class="section-header">
       <span class="section-label">Stay Connected</span>
-      <h2 class="section-title">News &amp; Social Media</h2>
-      <p class="section-subtitle">Follow the East Coast Rowing Council on Facebook and Instagram for the latest news, event photos, and announcements — straight from our feeds.</p>
+      <h2 class="section-title">News &amp; Updates</h2>
+      <p class="section-subtitle">Announcements and updates from the ECRC. Follow us on social media for photos and live coverage.</p>
     </div>
-    <div class="social-layout">
 
-      <!-- ── Facebook column ── -->
-      <div class="social-col">
-        <div class="social-col-header">
-          <div class="social-platform-icon fb">f</div>
-          <div class="social-col-header-text">
-            <h3>East Coast Rowing Council</h3>
-            <span>facebook.com/EastCoastRowingCouncil</span>
-          </div>
+    <!-- Follow Us cards -->
+    <div class="follow-cards">
+      <a href="https://www.facebook.com/EastCoastRowingCouncil" class="follow-card follow-card-fb" target="_blank" rel="noopener">
+        <div class="follow-card-icon">f</div>
+        <div class="follow-card-info">
+          <h4>East Coast Rowing Council</h4>
+          <span>facebook.com/EastCoastRowingCouncil</span>
         </div>
-        <div class="fb-embed-wrap">
-          <div class="fb-page"
-            data-href="https://www.facebook.com/EastCoastRowingCouncil"
-            data-tabs="timeline"
-            data-width="600"
-            data-height="650"
-            data-small-header="false"
-            data-adapt-container-width="true"
-            data-hide-cover="false"
-            data-show-facepile="false">
-            <blockquote cite="https://www.facebook.com/EastCoastRowingCouncil" class="fb-xfbml-parse-ignore">
-              <a href="https://www.facebook.com/EastCoastRowingCouncil">East Coast Rowing Council on Facebook</a>
-            </blockquote>
-          </div>
+        <span class="follow-card-btn">Follow &#8594;</span>
+      </a>
+      <a href="https://www.instagram.com/east.coastrowing/" class="follow-card follow-card-ig" target="_blank" rel="noopener">
+        <div class="follow-card-icon">&#128247;</div>
+        <div class="follow-card-info">
+          <h4>@east.coastrowing</h4>
+          <span>instagram.com/east.coastrowing</span>
         </div>
-        <a href="https://www.facebook.com/EastCoastRowingCouncil"
-          target="_blank" rel="noopener noreferrer"
-          class="social-follow-link">
-          &#128077; Visit our Facebook Page &#8594;
-        </a>
-      </div>
-
-      <!-- ── Instagram column ── -->
-      <div class="social-col">
-        <div class="social-col-header">
-          <div class="social-platform-icon ig">&#9749;</div>
-          <div class="social-col-header-text">
-            <h3>@east.coastrowing</h3>
-            <span>instagram.com/east.coastrowing</span>
-          </div>
-        </div>
-        <div class="ig-posts">
-
-          <!--
-            HOW TO ADD INSTAGRAM POST EMBEDS:
-            1. Go to any post on instagram.com/east.coastrowing
-            2. Click the three-dot menu (···) on the post
-            3. Select "Embed" → copy the <blockquote> code shown
-            4. Paste it here replacing a placeholder <div class="ig-placeholder"> block
-            5. The embed.js script will render it automatically
-          -->
-
-          <!-- Post slot 1 — replace with your first Instagram embed code -->
-          <div class="ig-placeholder">
-            <div class="ig-placeholder-icon">&#9749;</div>
-            <h4>Instagram Post</h4>
-            <p>Paste an Instagram embed code here from<br /><code>@east.coastrowing</code></p>
-            <p style="font-size:0.72rem;color:var(--muted)">Post → ··· → Embed → Copy code</p>
-          </div>
-
-          <!-- Post slot 2 — replace with your second Instagram embed code -->
-          <div class="ig-placeholder">
-            <div class="ig-placeholder-icon">&#9749;</div>
-            <h4>Instagram Post</h4>
-            <p>Paste a second Instagram embed code here from<br /><code>@east.coastrowing</code></p>
-            <p style="font-size:0.72rem;color:var(--muted)">Post → ··· → Embed → Copy code</p>
-          </div>
-
-        </div>
-        <a href="https://www.instagram.com/east.coastrowing/"
-          target="_blank" rel="noopener noreferrer"
-          class="social-follow-link">
-          &#128247; Follow us on Instagram &#8594;
-        </a>
-      </div>
-
+        <span class="follow-card-btn">Follow &#8594;</span>
+      </a>
     </div>
+
+    <!-- News feed -->
+    <div class="news-feed-header">
+      <h3 class="news-feed-title">Latest Announcements</h3>
+    </div>
+    <div class="news-feed" id="news-feed"></div>
+
   </div>
 </section>
 
-<!-- Instagram embed renderer (one instance for whole page) -->
-<script async src="//www.instagram.com/embed.js"></script>
+<script>
+(function() {
+  const feed = document.getElementById('news-feed');
+  let posts;
+  try { posts = JSON.parse(localStorage.getItem('ecrc_admin_news') || '[]'); } catch { posts = []; }
+
+  if (!posts.length) {
+    feed.innerHTML = '<p class="news-empty">No announcements posted yet. Check back soon.</p>';
+    return;
+  }
+
+  feed.innerHTML = posts.map(n => {
+    const d = new Date(n.date);
+    const dateStr = isNaN(d) ? n.date : d.toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    // Convert YouTube/Vimeo URL to embed URL
+    let videoEmbed = '';
+    if (n.videoUrl) {
+      let embedSrc = '';
+      const ytMatch = n.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
+      const vmMatch = n.videoUrl.match(/vimeo\.com\/(\d+)/);
+      if (ytMatch) embedSrc = `https://www.youtube.com/embed/${ytMatch[1]}`;
+      else if (vmMatch) embedSrc = `https://player.vimeo.com/video/${vmMatch[1]}`;
+      if (embedSrc) videoEmbed = `<div style="position:relative;padding-top:56.25%;margin-bottom:2px;border-radius:8px;overflow:hidden;">
+        <iframe src="${embedSrc}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>
+      </div>`;
+    }
+
+    return `<article class="news-card">
+      ${n.imageData ? `<img src="${n.imageData}" alt="${n.title}" style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:4px;" />` : ''}
+      ${videoEmbed}
+      <span class="news-card-date">${dateStr}</span>
+      <h3 class="news-card-title">${n.title}</h3>
+      ${n.body ? `<p class="news-card-body">${n.body.replace(/\n/g, '<br>')}</p>` : ''}
+      ${n.link ? `<a href="${n.link}" class="news-card-link" target="_blank" rel="noopener">Read more &#8594;</a>` : ''}
+    </article>`;
+  }).join('');
+})();
+</script>
 
   <!-- ── events ── -->
 
@@ -194,214 +175,125 @@
   <div class="container">
     <div class="section-header">
       <span class="section-label">On The Water</span>
-      <h2 class="section-title">2025 Regatta Calendar</h2>
-      <p class="section-subtitle">The full ECRC regatta schedule for 2025. All events hosted by member clubs along the East Coast of Ireland.</p>
+      <h2 class="section-title">Regatta Calendar</h2>
+      <p class="section-subtitle">The full ECRC schedule. All events hosted by member clubs along the East Coast of Ireland.</p>
     </div>
 
-    <!-- May -->
-    <div class="cal-month">
-      <div class="cal-month-header">
-        <span class="cal-month-name">May</span>
-        <span class="cal-month-year">2025</span>
-        <span class="cal-month-count">2 events</span>
-      </div>
-      <div class="cal-grid">
+    <!-- Year tabs — rendered by JS -->
+    <div class="res-year-tabs" id="cal-year-tabs"></div>
 
-        <div class="cal-card">
-          <div class="cal-date-badge"><span class="cal-day">17</span><span class="cal-mon">May</span></div>
-          <div class="cal-logo">
-            <img src="Clubs Logo/SMRC.jpg" alt="St. Michael's RC" />
-          </div>
-          <div class="cal-details">
-            <h4>St. Michael's RC</h4>
-            <span class="cal-label">Host Club</span>
-          </div>
-          <a href="#" class="cal-map-btn" title="Get Directions">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Get Directions
-          </a>
-        </div>
-
-        <div class="cal-card">
-          <div class="cal-date-badge"><span class="cal-day">30</span><span class="cal-mon">May</span></div>
-          <div class="cal-logo">
-            <img src="Clubs Logo/Dalkey RC.jpg" alt="Dalkey RC" />
-          </div>
-          <div class="cal-details">
-            <h4>Dalkey RC</h4>
-            <span class="cal-label">Host Club</span>
-          </div>
-          <a href="#" class="cal-map-btn" title="Get Directions">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Get Directions
-          </a>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- June -->
-    <div class="cal-month">
-      <div class="cal-month-header">
-        <span class="cal-month-name">June</span>
-        <span class="cal-month-year">2025</span>
-        <span class="cal-month-count">3 events</span>
-      </div>
-      <div class="cal-grid">
-
-        <div class="cal-card">
-          <div class="cal-date-badge"><span class="cal-day">6</span><span class="cal-mon">Jun</span></div>
-          <div class="cal-logo">
-            <img src="Clubs Logo/Skerries RC.png" alt="Skerries RC" />
-          </div>
-          <div class="cal-details">
-            <h4>Skerries RC</h4>
-            <span class="cal-label">Host Club</span>
-          </div>
-          <a href="#" class="cal-map-btn" title="Get Directions">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Get Directions
-          </a>
-        </div>
-
-        <div class="cal-card">
-          <div class="cal-date-badge"><span class="cal-day">21</span><span class="cal-mon">Jun</span></div>
-          <div class="cal-logo">
-            <img src="Clubs Logo/Stella Maris RC.jpg" alt="Stella Maris RC" />
-          </div>
-          <div class="cal-details">
-            <h4>Stella Maris RC</h4>
-            <span class="cal-label">Host Club</span>
-          </div>
-          <a href="#" class="cal-map-btn" title="Get Directions">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Get Directions
-          </a>
-        </div>
-
-        <div class="cal-card">
-          <div class="cal-date-badge"><span class="cal-day">27</span><span class="cal-mon">Jun</span></div>
-          <div class="cal-logo">
-            <img src="Clubs Logo/Bray RC.jpg" alt="Bray RC" />
-          </div>
-          <div class="cal-details">
-            <h4>Bray RC</h4>
-            <span class="cal-label">Host Club</span>
-          </div>
-          <a href="#" class="cal-map-btn" title="Get Directions">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Get Directions
-          </a>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- July -->
-    <div class="cal-month">
-      <div class="cal-month-header">
-        <span class="cal-month-name">July</span>
-        <span class="cal-month-year">2025</span>
-        <span class="cal-month-count">3 events</span>
-      </div>
-      <div class="cal-grid">
-
-        <div class="cal-card">
-          <div class="cal-date-badge"><span class="cal-day">4</span><span class="cal-mon">Jul</span></div>
-          <div class="cal-logo">
-            <img src="Clubs Logo/St Pats RC.jpg" alt="St. Patricks RC" />
-          </div>
-          <div class="cal-details">
-            <h4>St. Patricks RC</h4>
-            <span class="cal-label">Host Club</span>
-          </div>
-          <a href="#" class="cal-map-btn" title="Get Directions">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Get Directions
-          </a>
-        </div>
-
-        <div class="cal-card">
-          <div class="cal-date-badge"><span class="cal-day">18</span><span class="cal-mon">Jul</span></div>
-          <div class="cal-logo">
-            <img src="Clubs Logo/Fingal RC.jpg" alt="Fingal RC" />
-          </div>
-          <div class="cal-details">
-            <h4>Fingal RC</h4>
-            <span class="cal-label">Host Club</span>
-          </div>
-          <a href="#" class="cal-map-btn" title="Get Directions">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Get Directions
-          </a>
-        </div>
-
-        <div class="cal-card">
-          <div class="cal-date-badge"><span class="cal-day">25</span><span class="cal-mon">Jul</span></div>
-          <div class="cal-logo">
-            <img src="Clubs Logo/Greystones Tc.jpg" alt="Greystones RC" />
-          </div>
-          <div class="cal-details">
-            <h4>Greystones RC</h4>
-            <span class="cal-label">Host Club</span>
-          </div>
-          <a href="#" class="cal-map-btn" title="Get Directions">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Get Directions
-          </a>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- August -->
-    <div class="cal-month">
-      <div class="cal-month-header">
-        <span class="cal-month-name">August</span>
-        <span class="cal-month-year">2025</span>
-        <span class="cal-month-count">2 events</span>
-      </div>
-      <div class="cal-grid">
-
-        <div class="cal-card">
-          <div class="cal-date-badge"><span class="cal-day">3</span><span class="cal-mon">Aug</span></div>
-          <div class="cal-logo">
-            <img src="Clubs Logo/Wicklow RC.jpg" alt="Wicklow RC" />
-          </div>
-          <div class="cal-details">
-            <h4>Wicklow RC</h4>
-            <span class="cal-label">Host Club</span>
-          </div>
-          <a href="#" class="cal-map-btn" title="Get Directions">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Get Directions
-          </a>
-        </div>
-
-        <!-- IFC Championship — featured card -->
-        <div class="cal-card cal-card-featured">
-          <div class="cal-featured-badge">Championship</div>
-          <div class="cal-date-badge cal-date-multi">
-            <span class="cal-day">15–17</span><span class="cal-mon">Aug</span>
-          </div>
-          <div class="cal-logo">
-            <img src="Brand_assets/ECRC-Logo.jpg" alt="ICRF Championship" />
-          </div>
-          <div class="cal-details">
-            <h4>ICRF Championship</h4>
-            <span class="cal-label">Irish Coastal Rowing Federation</span>
-          </div>
-          <a href="#" class="cal-map-btn" title="Get Directions">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Get Directions
-          </a>
-        </div>
-
-      </div>
-    </div>
-
+    <div id="cal-render"></div>
   </div>
 </section>
+
+<script>
+(function renderCalendar() {
+  const DEFAULT_EVENTS = [
+    { id: 'e1', type: 'ecrc_race', date: '2026-05-16', club: "St. Michael's RC", logo: 'Clubs Logo/SMRC.jpg', location: '', map: '#' },
+    { id: 'e2', type: 'ecrc_race', date: '2026-05-29', club: 'Dalkey RC',         logo: 'Clubs Logo/Dalkey RC.jpg', location: '', map: '#' },
+    { id: 'e3', type: 'ecrc_race', date: '2026-06-06', club: 'Skerries RC',        logo: 'Clubs Logo/Skerries RC.png', location: '', map: '#' },
+    { id: 'e4', type: 'ecrc_race', date: '2026-06-20', club: 'Stella Maris RC',    logo: 'Clubs Logo/Stella Maris RC.jpg', location: '', map: '#' },
+    { id: 'e5', type: 'ecrc_race', date: '2026-06-26', club: 'Bray RC',            logo: 'Clubs Logo/Bray RC.jpg', location: '', map: '#' },
+    { id: 'e6', type: 'ecrc_race', date: '2026-07-04', club: 'St. Patricks RC',    logo: 'Clubs Logo/St Pats RC.jpg', location: '', map: '#' },
+    { id: 'e7', type: 'ecrc_race', date: '2026-07-18', club: 'Fingal RC',          logo: 'Clubs Logo/Fingal RC.jpg', location: '', map: '#' },
+    { id: 'e8', type: 'ecrc_race', date: '2026-07-25', club: 'Greystones RC',      logo: 'Clubs Logo/Greystones Tc.jpg', location: '', map: '#' },
+    { id: 'e9', type: 'ecrc_race', date: '2026-08-01', club: 'Wicklow RC',         logo: 'Clubs Logo/Wicklow RC.jpg', location: '', map: '#' },
+  ];
+
+  let allEvents;
+  try { allEvents = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null') || DEFAULT_EVENTS; }
+  catch { allEvents = DEFAULT_EVENTS; }
+
+  const TYPE_BADGE = {
+    ecrc_race: { label: 'ECRC Race',     bg: 'rgba(13,34,68,0.09)',    color: '#0d2244' },
+    charity:   { label: 'Charity Event', bg: 'rgba(22,163,74,0.12)',   color: '#15803d' },
+    other:     { label: 'Other',         bg: 'rgba(100,116,139,0.12)', color: '#475569' },
+  };
+  const mapIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+
+  // Build sorted list of unique years (newest first)
+  const currentYear = new Date().getFullYear();
+  const yearsSet = new Set(allEvents.map(e => new Date(e.date).getFullYear()));
+  if (!yearsSet.size) yearsSet.add(currentYear);
+  const years = Array.from(yearsSet).sort((a, b) => b - a);
+
+  // Render year tabs
+  const tabsEl = document.getElementById('cal-year-tabs');
+  tabsEl.innerHTML = years.map((y, i) =>
+    `<button class="res-year-btn${i === 0 ? ' active' : ''}" data-year="${y}" onclick="switchCalYear(${y}, this)">${y}</button>`
+  ).join('');
+
+  function renderYear(year) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const isCurrentYear = year === currentYear;
+
+    let events = allEvents.filter(e => new Date(e.date).getFullYear() === year);
+    // Only hide past events for the current year
+    if (isCurrentYear) {
+      events = events.filter(e => new Date(e.endDate || e.date) >= today);
+    }
+
+    if (!events.length) {
+      document.getElementById('cal-render').innerHTML =
+        `<p style="color:var(--muted);text-align:center;padding:40px 0;">No events scheduled for ${year}.</p>`;
+      return;
+    }
+
+    // Group by month
+    const months = {};
+    events.forEach(e => {
+      const d = new Date(e.date);
+      const key = d.getFullYear() + '-' + String(d.getMonth()).padStart(2,'0');
+      if (!months[key]) months[key] = { label: d.toLocaleDateString('en-IE', { month: 'long' }), year: d.getFullYear(), events: [] };
+      months[key].events.push(e);
+    });
+
+    const html = Object.values(months).map(m => {
+      const cards = m.events.map(e => {
+        const d   = new Date(e.date);
+        const day = e.endDate ? `${d.getDate()}–${new Date(e.endDate).getDate()}` : d.getDate();
+        const mon = d.toLocaleDateString('en-IE', { month: 'short' }).toUpperCase();
+        const badge = TYPE_BADGE[e.type] || TYPE_BADGE.other;
+        const isFeatured = e.type !== 'ecrc_race';
+        return `<div class="cal-card${isFeatured ? ' cal-card-charity' : ''}">
+          ${isFeatured ? `<div class="cal-featured-badge" style="background:${badge.bg};color:${badge.color};">${badge.label}</div>` : ''}
+          <div class="cal-date-badge${e.endDate ? ' cal-date-multi' : ''}">
+            <span class="cal-day">${day}</span>
+            <span class="cal-mon">${mon}</span>
+          </div>
+          <div class="cal-logo"><img src="${e.logo}" alt="${e.club}" /></div>
+          <div class="cal-details">
+            <h4>${e.club}</h4>
+            <span class="cal-label">${badge.label}</span>
+          </div>
+          <a href="${e.map || '#'}" class="cal-map-btn" target="_blank" rel="noopener" title="Get Directions">
+            ${mapIcon} Get Directions
+          </a>
+        </div>`;
+      }).join('');
+
+      return `<div class="cal-month">
+        <div class="cal-month-header">
+          <span class="cal-month-name">${m.label}</span>
+          <span class="cal-month-year">${m.year}</span>
+          <span class="cal-month-count">${m.events.length} event${m.events.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="cal-grid">${cards}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('cal-render').innerHTML = html;
+  }
+
+  window.switchCalYear = function(year, btn) {
+    document.querySelectorAll('#cal-year-tabs .res-year-btn').forEach(b => b.classList.toggle('active', b === btn));
+    renderYear(year);
+  };
+
+  // Default: show the most recent year (index 0)
+  renderYear(years[0]);
+})();
+</script>
 
   <!-- ── results ── -->
 
@@ -417,7 +309,8 @@
 
     <!-- Year tabs -->
     <div class="res-year-tabs" id="res-year-tabs">
-      <button class="res-year-btn active" data-year="2025">2025</button>
+      <button class="res-year-btn active" data-year="2026">2026</button>
+      <button class="res-year-btn" data-year="2025">2025</button>
       <button class="res-year-btn" data-year="2024">2024</button>
     </div>
 
@@ -441,30 +334,78 @@
 ───────────────────────────────────────────── */
 const ECRC_RESULTS = {
   2025: {
-    regattas: [
-      { id: "stmichaels", short: "St. Michael's", date: "17 May", logo: "Clubs Logo/SMRC.jpg",             name: "St. Michael's RC" },
-      { id: "dalkey",     short: "Dalkey",         date: "30 May", logo: "Clubs Logo/Dalkey RC.jpg",        name: "Dalkey RC" },
-      { id: "skerries",   short: "Skerries",        date: "6 Jun",  logo: "Clubs Logo/Skerries RC.png",     name: "Skerries RC" },
-      { id: "stella",     short: "Stella Maris",    date: "21 Jun", logo: "Clubs Logo/Stella Maris RC.jpg", name: "Stella Maris RC" },
-      { id: "bray",       short: "Bray",            date: "27 Jun", logo: "Clubs Logo/Bray RC.jpg",         name: "Bray RC" },
-      { id: "stpats",     short: "St. Patricks",    date: "4 Jul",  logo: "Clubs Logo/St Pats RC.jpg",      name: "St. Patricks RC" },
-      { id: "fingal",     short: "Fingal",           date: "18 Jul", logo: "Clubs Logo/Fingal RC.jpg",       name: "Fingal RC" },
-      { id: "greystones", short: "Greystones",       date: "25 Jul", logo: "Clubs Logo/Greystones Tc.jpg",   name: "Greystones RC" },
-      { id: "wicklow",    short: "Wicklow",          date: "3 Aug",  logo: "Clubs Logo/Wicklow RC.jpg",      name: "Wicklow RC" },
-    ],
-    results: {
-      stmichaels: {},
-      dalkey:     {},
-      skerries:   {},
-      stella:     {},
-      bray:       {},
-      stpats:     {},
-      fingal:     {},
-      greystones: {},
-      wicklow:    {},
-    }
+    regattas: (function() {
+      // Load ECRC Race events from admin localStorage, fall back to defaults
+      const DEFAULT = [
+        { id: "stmichaels", short: "St. Michael's", date: "17 May", logo: "Clubs Logo/SMRC.jpg",             name: "St. Michael's RC" },
+        { id: "dalkey",     short: "Dalkey",         date: "30 May", logo: "Clubs Logo/Dalkey RC.jpg",        name: "Dalkey RC" },
+        { id: "skerries",   short: "Skerries",        date: "6 Jun",  logo: "Clubs Logo/Skerries RC.png",     name: "Skerries RC" },
+        { id: "stella",     short: "Stella Maris",    date: "21 Jun", logo: "Clubs Logo/Stella Maris RC.jpg", name: "Stella Maris RC" },
+        { id: "bray",       short: "Bray",            date: "27 Jun", logo: "Clubs Logo/Bray RC.jpg",         name: "Bray RC" },
+        { id: "stpats",     short: "St. Patricks",    date: "4 Jul",  logo: "Clubs Logo/St Pats RC.jpg",      name: "St. Patricks RC" },
+        { id: "fingal",     short: "Fingal",           date: "18 Jul", logo: "Clubs Logo/Fingal RC.jpg",       name: "Fingal RC" },
+        { id: "greystones", short: "Greystones",       date: "25 Jul", logo: "Clubs Logo/Greystones Tc.jpg",   name: "Greystones RC" },
+        { id: "wicklow",    short: "Wicklow",          date: "3 Aug",  logo: "Clubs Logo/Wicklow RC.jpg",      name: "Wicklow RC" },
+      ];
+      try {
+        const stored = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null');
+        if (!stored) return DEFAULT;
+        const races = stored.filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === 2025);
+        if (!races.length) return DEFAULT;
+        return races.map(e => {
+            const d = new Date(e.date);
+            const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+            const short = e.club.replace(/ Rowing Club$/, '').replace(/ RC$/, '');
+            return { id: e.id, short, date: dateStr, logo: e.logo, name: e.club };
+          });
+      } catch { return DEFAULT; }
+    })(),
+    results: (function() {
+      try {
+        const all = JSON.parse(localStorage.getItem('ecrc_admin_results') || '{}');
+        // Support both year-nested {2025:{...}} and flat legacy {regattaId:{...}}
+        return all['2025'] || all;
+      } catch { return {}; }
+    })()
   },
-  2024: { regattas: [], results: {} }
+  2026: {
+    regattas: (function() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null');
+        if (!stored) return [];
+        return stored
+          .filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === 2026)
+          .map(e => {
+            const d = new Date(e.date);
+            const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+            const short = e.club.replace(/ Rowing Club$/, '').replace(/ RC$/, '');
+            return { id: e.id, short, date: dateStr, logo: e.logo, name: e.club };
+          });
+      } catch { return []; }
+    })(),
+    results: (function() {
+      try { return (JSON.parse(localStorage.getItem('ecrc_admin_results') || '{}'))['2026'] || {}; } catch { return {}; }
+    })()
+  },
+  2024: {
+    regattas: (function() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null');
+        if (!stored) return [];
+        return stored
+          .filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === 2024)
+          .map(e => {
+            const d = new Date(e.date);
+            const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+            const short = e.club.replace(/ Rowing Club$/, '').replace(/ RC$/, '');
+            return { id: e.id, short, date: dateStr, logo: e.logo, name: e.club };
+          });
+      } catch { return []; }
+    })(),
+    results: (function() {
+      try { return (JSON.parse(localStorage.getItem('ecrc_admin_results') || '{}'))['2024'] || {}; } catch { return {}; }
+    })()
+  }
 };
 
 const CATEGORIES = [
@@ -574,11 +515,11 @@ function switchRegatta(year, id, btn) {
 }
 
 (function init() {
-  const YEAR_ORDER = ['2025', '2024'];
+  const YEAR_ORDER = ['2026', '2025', '2024'];
   const container = document.getElementById('res-year-panels');
   container.innerHTML = YEAR_ORDER.map(y => buildYearPanel(y)).join('');
   // default: activate current year
-  const defaultYear = '2025';
+  const defaultYear = '2026';
   document.querySelector(`.year-panel[data-year="${defaultYear}"]`).classList.add('active');
 
   document.getElementById('res-year-tabs').querySelectorAll('.res-year-btn').forEach(btn => {

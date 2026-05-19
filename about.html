@@ -8,6 +8,147 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .about-intro {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 56px;
+      align-items: start;
+      margin-bottom: 72px;
+    }
+    .about-intro-text p {
+      font-size: 1rem;
+      color: var(--text);
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    .about-stat-card {
+      background: var(--navy);
+      border-radius: 16px;
+      padding: 36px 28px;
+      text-align: center;
+      position: sticky;
+      top: 100px;
+    }
+    .about-stat-card .stat-year {
+      font-family: 'Merriweather', serif;
+      font-size: 3.2rem;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .about-stat-card .stat-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 28px;
+    }
+    .about-stat-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.12);
+      margin-bottom: 24px;
+    }
+    .about-stat-card .stat-detail {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.6;
+    }
+    .about-stat-card .stat-detail strong {
+      color: var(--white);
+      font-weight: 600;
+    }
+    .about-history {
+      background: var(--off-white);
+      border-radius: 16px;
+      padding: 48px;
+    }
+    .about-history-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .about-history-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gold);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .about-history h2 {
+      font-family: 'Merriweather', serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--navy);
+      margin: 0;
+    }
+    .about-history-body {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .about-history-body p {
+      font-size: 0.95rem;
+      color: var(--text);
+      line-height: 1.85;
+      margin: 0;
+    }
+    .about-quote {
+      border-left: 3px solid var(--gold);
+      padding-left: 20px;
+      margin: 4px 0;
+    }
+    .about-quote p {
+      font-style: italic;
+      color: var(--navy-mid) !important;
+    }
+    .about-quote cite {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-style: normal;
+      font-weight: 600;
+    }
+    .about-clubs-strip {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    .about-clubs-strip h3 {
+      font-family: 'Merriweather', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 16px;
+    }
+    .about-clubs-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .about-club-tag {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--navy);
+    }
+    @media (max-width: 860px) {
+      .about-intro { grid-template-columns: 1fr; }
+      .about-stat-card { position: static; }
+      .about-history { padding: 32px 24px; }
+    }
+  </style>
 </head>
 <body>
 
@@ -59,24 +200,75 @@
     </div>
   </nav>
 
-  <!-- Page header -->
+  <!-- Page hero -->
   <div class="page-hero">
     <div class="container">
       <span class="section-label">Who We Are</span>
       <h1>About the ECRC</h1>
-      <p>Governing competitive rowing on the Eastern Seaboard since 1983.</p>
+      <p>The regional organisation of the Irish Coastal Rowing Federation on Ireland&rsquo;s East Coast &mdash; governing the sport since 1936.</p>
     </div>
   </div>
 
   <!-- Page content -->
   <div class="page-content">
     <div class="container">
-      <div class="placeholder-block">
-        <h2 style="font-family:'Merriweather',serif;color:var(--navy);margin-bottom:12px;">About Us Content</h2>
-        <p style="color:var(--muted);max-width:500px;margin:0 auto;">
-          This page will include the ECRC's mission statement, history, board of directors, governance structure, and information about how to get involved with the council.
-        </p>
+
+      <!-- Intro + stat card -->
+      <div class="about-intro">
+        <div class="about-intro-text">
+          <h2 style="font-family:'Merriweather',serif;font-size:1.5rem;font-weight:900;color:var(--navy);margin-bottom:20px;">About Us</h2>
+          <p>The East Coast Rowing Council is the regional organisation of the Irish Coastal Rowing Federation on Ireland&rsquo;s East coast, representing the sport of Coastal and ocean rowing. As per local tradition, coastal rowing is undertaken by crews of four with one sweep oar each, and a coxswain, in wooden clinker-built boats.</p>
+          <p>Formed in 1936, the ECRC has the task of formalising the rules, organising regatta dates and judging any disputes between members. Rules were laid down as to sizes and weights of skiffs to make races fairer. The ECRC represents clubs in the counties of Dublin, Wicklow, and North Wexford.</p>
+        </div>
+
+        <div class="about-stat-card">
+          <span class="stat-year">1936</span>
+          <span class="stat-label">Year Founded</span>
+          <div class="about-stat-divider"></div>
+          <p class="stat-detail">
+            <strong>Crews of 4</strong> with one sweep oar each and a coxswain<br /><br />
+            <strong>Wooden clinker-built</strong> skiff boats<br /><br />
+            <strong>Counties Dublin, Wicklow</strong> &amp; North Wexford
+          </p>
+        </div>
       </div>
+
+      <!-- History section -->
+      <div class="about-history">
+        <div class="about-history-header">
+          <div class="about-history-icon">&#9875;</div>
+          <h2>History</h2>
+        </div>
+
+        <div class="about-history-body">
+          <p>Clinker skiff-type boats were once one of the most numerous type of working boats found along the eastern seaboard of Ireland. They were recorded in 1874 by historian E.W. Holdsworth, where he noted that:</p>
+
+          <div class="about-quote">
+            <p>&ldquo;The smaller boats employed for the line-fishery are of the same style as the Norway yawl, sharp at both ends.&rdquo;</p>
+            <cite>— E.W. Holdsworth, 1874</cite>
+          </div>
+
+          <p>Skiff racing has its origins in the occupation of hobbling. Hobblers were freelance pilots, and competition was strong to be the first to board the approaching ships. Not only did the successful hobblers receive payment to pilot the ships into port but they were also awarded the contract for discharging and loading those ships whilst in port.</p>
+
+          <p>The skiffs worked mainly between Lambay Island just north of Dublin Bay and Wicklow Head, where they required considerable skill on behalf of the oarsmen. The long tradition of rowing is now carried on through the rowing clubs affiliated to the East Coast Rowing Council.</p>
+
+          <div class="about-clubs-strip">
+            <h3>Affiliated Club Locations</h3>
+            <div class="about-clubs-list">
+              <span class="about-club-tag">Ringsend</span>
+              <span class="about-club-tag">East Wall</span>
+              <span class="about-club-tag">Dun Laoghaire</span>
+              <span class="about-club-tag">Dalkey</span>
+              <span class="about-club-tag">Bray</span>
+              <span class="about-club-tag">Greystones</span>
+              <span class="about-club-tag">Wicklow</span>
+              <span class="about-club-tag">Arklow</span>
+              <span class="about-club-tag">Courtown</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -90,7 +282,7 @@
             <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC Logo" />
             <span class="footer-logo-text">East Coast Rowing Council</span>
           </div>
-          <p>The governing body for competitive rowing across the Eastern Seaboard, promoting excellence, safety, and sportsmanship since 1983.</p>
+          <p>The governing body for coastal rowing on the East Coast of Ireland, covering counties Dublin, Wicklow, and North Wexford. Affiliated to the Irish Coastal Rowing Federation.</p>
           <div class="social-links">
             <a href="https://www.facebook.com/EastCoastRowingCouncil" class="social-link" title="Facebook" target="_blank" rel="noopener">f</a>
             <a href="#" class="social-link" title="X / Twitter">&#120143;</a>

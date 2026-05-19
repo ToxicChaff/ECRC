@@ -68,45 +68,53 @@
     </div>
   </div>
 
-  <!-- PDF viewer -->
+  <!-- PDF viewer — dynamically loads current rulebook from admin -->
   <div style="background:var(--off-white);padding:32px 0 0;">
     <div class="container">
-
-      <!-- Toolbar -->
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
         <div>
-          <h2 style="font-family:'Merriweather',serif;font-size:1.1rem;color:var(--navy);margin-bottom:2px;">2025 ECRC Rule Book — Version 5</h2>
+          <h2 id="rb-title" style="font-family:'Merriweather',serif;font-size:1.1rem;color:var(--navy);margin-bottom:2px;">ECRC Rule Book</h2>
           <p style="font-size:0.8rem;color:var(--muted);margin:0;">Official competition rules for all ECRC-sanctioned events.</p>
         </div>
-        <a href="Rule Book/2025 ECRC Rule Book V5.pdf"
-           download="2025 ECRC Rule Book V5.pdf"
+        <a id="rb-download" href="#" download
            style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:var(--white);font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:600;padding:10px 20px;border-radius:8px;text-decoration:none;transition:background 0.2s;"
            onmouseover="this.style.background='var(--navy-mid)'" onmouseout="this.style.background='var(--navy)'">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Download PDF
         </a>
       </div>
-
-      <!-- PDF embed -->
       <div style="border-radius:12px 12px 0 0;overflow:hidden;border:1px solid var(--border);border-bottom:none;box-shadow:0 4px 24px rgba(13,34,68,0.1);">
-        <object
-          data="Rule Book/2025 ECRC Rule Book V5.pdf"
-          type="application/pdf"
-          width="100%"
-          style="display:block;height:85vh;min-height:600px;">
-          <!-- Fallback for browsers without built-in PDF viewer -->
+        <object id="rb-object" data="" type="application/pdf" width="100%" style="display:block;height:85vh;min-height:600px;">
           <div style="padding:48px;text-align:center;background:var(--white);">
             <p style="color:var(--muted);margin-bottom:16px;">Your browser does not support inline PDF viewing.</p>
-            <a href="Rule Book/2025 ECRC Rule Book V5.pdf" download="2025 ECRC Rule Book V5.pdf"
-               style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:var(--white);font-size:0.85rem;font-weight:600;padding:11px 22px;border-radius:8px;text-decoration:none;">
-              Download the Rulebook
-            </a>
+            <a id="rb-fallback" href="#" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:var(--white);font-size:0.85rem;font-weight:600;padding:11px 22px;border-radius:8px;text-decoration:none;">Download the Rulebook</a>
           </div>
         </object>
       </div>
-
     </div>
   </div>
+
+  <script>
+  (function() {
+    const DEFAULT = { year: '2025', version: 'V5', filename: '2025 ECRC Rule Book V5.pdf', dataKey: null };
+    let book;
+    try {
+      const books = JSON.parse(localStorage.getItem('ecrc_admin_rulebooks') || 'null');
+      book = (books && books[0]) || DEFAULT;
+    } catch { book = DEFAULT; }
+
+    const label = `${book.year} ECRC Rule Book — Version ${book.version}`;
+    document.getElementById('rb-title').textContent = label;
+
+    const pdfSrc = (book.dataKey && localStorage.getItem(book.dataKey))
+      || `Rule Book/${book.filename}`;
+
+    document.getElementById('rb-object').data = pdfSrc;
+    document.getElementById('rb-download').href = pdfSrc;
+    document.getElementById('rb-download').download = book.filename;
+    document.getElementById('rb-fallback').href = pdfSrc;
+  })();
+  </script>
 
   <!-- Footer -->
   <footer class="footer">

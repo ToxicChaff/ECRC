@@ -10,7 +10,8 @@
 
     <!-- Year tabs -->
     <div class="res-year-tabs" id="res-year-tabs">
-      <button class="res-year-btn active" data-year="2025">2025</button>
+      <button class="res-year-btn active" data-year="2026">2026</button>
+      <button class="res-year-btn" data-year="2025">2025</button>
       <button class="res-year-btn" data-year="2024">2024</button>
     </div>
 
@@ -34,30 +35,78 @@
 ───────────────────────────────────────────── */
 const ECRC_RESULTS = {
   2025: {
-    regattas: [
-      { id: "stmichaels", short: "St. Michael's", date: "17 May", logo: "Clubs Logo/SMRC.jpg",             name: "St. Michael's RC" },
-      { id: "dalkey",     short: "Dalkey",         date: "30 May", logo: "Clubs Logo/Dalkey RC.jpg",        name: "Dalkey RC" },
-      { id: "skerries",   short: "Skerries",        date: "6 Jun",  logo: "Clubs Logo/Skerries RC.png",     name: "Skerries RC" },
-      { id: "stella",     short: "Stella Maris",    date: "21 Jun", logo: "Clubs Logo/Stella Maris RC.jpg", name: "Stella Maris RC" },
-      { id: "bray",       short: "Bray",            date: "27 Jun", logo: "Clubs Logo/Bray RC.jpg",         name: "Bray RC" },
-      { id: "stpats",     short: "St. Patricks",    date: "4 Jul",  logo: "Clubs Logo/St Pats RC.jpg",      name: "St. Patricks RC" },
-      { id: "fingal",     short: "Fingal",           date: "18 Jul", logo: "Clubs Logo/Fingal RC.jpg",       name: "Fingal RC" },
-      { id: "greystones", short: "Greystones",       date: "25 Jul", logo: "Clubs Logo/Greystones Tc.jpg",   name: "Greystones RC" },
-      { id: "wicklow",    short: "Wicklow",          date: "3 Aug",  logo: "Clubs Logo/Wicklow RC.jpg",      name: "Wicklow RC" },
-    ],
-    results: {
-      stmichaels: {},
-      dalkey:     {},
-      skerries:   {},
-      stella:     {},
-      bray:       {},
-      stpats:     {},
-      fingal:     {},
-      greystones: {},
-      wicklow:    {},
-    }
+    regattas: (function() {
+      // Load ECRC Race events from admin localStorage, fall back to defaults
+      const DEFAULT = [
+        { id: "stmichaels", short: "St. Michael's", date: "17 May", logo: "Clubs Logo/SMRC.jpg",             name: "St. Michael's RC" },
+        { id: "dalkey",     short: "Dalkey",         date: "30 May", logo: "Clubs Logo/Dalkey RC.jpg",        name: "Dalkey RC" },
+        { id: "skerries",   short: "Skerries",        date: "6 Jun",  logo: "Clubs Logo/Skerries RC.png",     name: "Skerries RC" },
+        { id: "stella",     short: "Stella Maris",    date: "21 Jun", logo: "Clubs Logo/Stella Maris RC.jpg", name: "Stella Maris RC" },
+        { id: "bray",       short: "Bray",            date: "27 Jun", logo: "Clubs Logo/Bray RC.jpg",         name: "Bray RC" },
+        { id: "stpats",     short: "St. Patricks",    date: "4 Jul",  logo: "Clubs Logo/St Pats RC.jpg",      name: "St. Patricks RC" },
+        { id: "fingal",     short: "Fingal",           date: "18 Jul", logo: "Clubs Logo/Fingal RC.jpg",       name: "Fingal RC" },
+        { id: "greystones", short: "Greystones",       date: "25 Jul", logo: "Clubs Logo/Greystones Tc.jpg",   name: "Greystones RC" },
+        { id: "wicklow",    short: "Wicklow",          date: "3 Aug",  logo: "Clubs Logo/Wicklow RC.jpg",      name: "Wicklow RC" },
+      ];
+      try {
+        const stored = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null');
+        if (!stored) return DEFAULT;
+        const races = stored.filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === 2025);
+        if (!races.length) return DEFAULT;
+        return races.map(e => {
+            const d = new Date(e.date);
+            const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+            const short = e.club.replace(/ Rowing Club$/, '').replace(/ RC$/, '');
+            return { id: e.id, short, date: dateStr, logo: e.logo, name: e.club };
+          });
+      } catch { return DEFAULT; }
+    })(),
+    results: (function() {
+      try {
+        const all = JSON.parse(localStorage.getItem('ecrc_admin_results') || '{}');
+        // Support both year-nested {2025:{...}} and flat legacy {regattaId:{...}}
+        return all['2025'] || all;
+      } catch { return {}; }
+    })()
   },
-  2024: { regattas: [], results: {} }
+  2026: {
+    regattas: (function() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null');
+        if (!stored) return [];
+        return stored
+          .filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === 2026)
+          .map(e => {
+            const d = new Date(e.date);
+            const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+            const short = e.club.replace(/ Rowing Club$/, '').replace(/ RC$/, '');
+            return { id: e.id, short, date: dateStr, logo: e.logo, name: e.club };
+          });
+      } catch { return []; }
+    })(),
+    results: (function() {
+      try { return (JSON.parse(localStorage.getItem('ecrc_admin_results') || '{}'))['2026'] || {}; } catch { return {}; }
+    })()
+  },
+  2024: {
+    regattas: (function() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null');
+        if (!stored) return [];
+        return stored
+          .filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === 2024)
+          .map(e => {
+            const d = new Date(e.date);
+            const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+            const short = e.club.replace(/ Rowing Club$/, '').replace(/ RC$/, '');
+            return { id: e.id, short, date: dateStr, logo: e.logo, name: e.club };
+          });
+      } catch { return []; }
+    })(),
+    results: (function() {
+      try { return (JSON.parse(localStorage.getItem('ecrc_admin_results') || '{}'))['2024'] || {}; } catch { return {}; }
+    })()
+  }
 };
 
 const CATEGORIES = [
@@ -167,11 +216,11 @@ function switchRegatta(year, id, btn) {
 }
 
 (function init() {
-  const YEAR_ORDER = ['2025', '2024'];
+  const YEAR_ORDER = ['2026', '2025', '2024'];
   const container = document.getElementById('res-year-panels');
   container.innerHTML = YEAR_ORDER.map(y => buildYearPanel(y)).join('');
   // default: activate current year
-  const defaultYear = '2025';
+  const defaultYear = '2026';
   document.querySelector(`.year-panel[data-year="${defaultYear}"]`).classList.add('active');
 
   document.getElementById('res-year-tabs').querySelectorAll('.res-year-btn').forEach(btn => {
