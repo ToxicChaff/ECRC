@@ -8,22 +8,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
   <!-- ── nav ── -->
 
-<!-- Top bar -->
-<div class="top-bar">
-  <div class="container">
-    <span>&#9990; eastcoastrowingireland@gmail.com</span>
-    <span class="top-bar-right">
-      <a href="#">Member Portal</a> &nbsp;|&nbsp;
-      <a href="#">Volunteer</a> &nbsp;|&nbsp;
-      <a href="#">Newsletter</a>
-    </span>
-  </div>
-</div>
+
 
 <!-- Navigation -->
 <nav class="navbar" id="navbar">
@@ -69,9 +61,7 @@
   <div class="hero-overlay"></div>
   <div class="container">
     <div class="hero-content">
-      <div class="hero-badge">2025–2026 Season Now Open</div>
-      <h1>Welcome to the<br /><span>East Coast</span><br />Rowing Council</h1>
-      <p>The governing body for coastal rowing on the East Coast of Ireland — connecting clubs, athletes, and officials across Dublin, Wicklow, and North Wexford.</p>
+<h1>Welcome to the<br /><span>East Coast</span><br />Rowing Council</h1>
       <div class="hero-actions">
         <a href="#events" class="btn btn-primary">Find Out More</a>
         <a href="#clubs" class="btn btn-outline-white">View Member Clubs</a>
@@ -119,54 +109,8 @@
       </a>
     </div>
 
-    <!-- News feed -->
-    <div class="news-feed-header">
-      <h3 class="news-feed-title">Latest Announcements</h3>
-    </div>
-    <div class="news-feed" id="news-feed"></div>
-
   </div>
 </section>
-
-<script>
-(function() {
-  const feed = document.getElementById('news-feed');
-  let posts;
-  try { posts = JSON.parse(localStorage.getItem('ecrc_admin_news') || '[]'); } catch { posts = []; }
-
-  if (!posts.length) {
-    feed.innerHTML = '<p class="news-empty">No announcements posted yet. Check back soon.</p>';
-    return;
-  }
-
-  feed.innerHTML = posts.map(n => {
-    const d = new Date(n.date);
-    const dateStr = isNaN(d) ? n.date : d.toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' });
-
-    // Convert YouTube/Vimeo URL to embed URL
-    let videoEmbed = '';
-    if (n.videoUrl) {
-      let embedSrc = '';
-      const ytMatch = n.videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
-      const vmMatch = n.videoUrl.match(/vimeo\.com\/(\d+)/);
-      if (ytMatch) embedSrc = `https://www.youtube.com/embed/${ytMatch[1]}`;
-      else if (vmMatch) embedSrc = `https://player.vimeo.com/video/${vmMatch[1]}`;
-      if (embedSrc) videoEmbed = `<div style="position:relative;padding-top:56.25%;margin-bottom:2px;border-radius:8px;overflow:hidden;">
-        <iframe src="${embedSrc}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>
-      </div>`;
-    }
-
-    return `<article class="news-card">
-      ${n.imageData ? `<img src="${n.imageData}" alt="${n.title}" style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:4px;" />` : ''}
-      ${videoEmbed}
-      <span class="news-card-date">${dateStr}</span>
-      <h3 class="news-card-title">${n.title}</h3>
-      ${n.body ? `<p class="news-card-body">${n.body.replace(/\n/g, '<br>')}</p>` : ''}
-      ${n.link ? `<a href="${n.link}" class="news-card-link" target="_blank" rel="noopener">Read more &#8594;</a>` : ''}
-    </article>`;
-  }).join('');
-})();
-</script>
 
   <!-- ── events ── -->
 
@@ -307,109 +251,36 @@
       <p class="section-subtitle" style="color:rgba(255,255,255,0.6);">Select a regatta to view the full results by category.</p>
     </div>
 
-    <!-- Year tabs -->
-    <div class="res-year-tabs" id="res-year-tabs">
-      <button class="res-year-btn active" data-year="2026">2026</button>
-      <button class="res-year-btn" data-year="2025">2025</button>
-      <button class="res-year-btn" data-year="2024">2024</button>
-    </div>
+    <!-- Year tabs — populated by Firestore -->
+    <div class="res-year-tabs" id="res-year-tabs"></div>
 
     <!-- Year panels rendered by JS below -->
-    <div id="res-year-panels"></div>
+    <div id="res-year-panels" style="min-height:120px;display:flex;align-items:center;justify-content:center;">
+      <p style="color:rgba(255,255,255,0.35);font-size:0.9rem;">Loading results…</p>
+    </div>
 
   </div>
 </section>
 
 <script>
-/* ─────────────────────────────────────────────
-   RESULTS DATA
-   To add real results, fill in the arrays:
-   [gold_club, silver_club, bronze_club]
-   Leave an empty object {} for TBD / not yet run.
-   Example entry:
-     stmichaels: {
-       "Under 12s": ["Skerries RC", "Bray RC", "Wicklow RC"],
-       "Senior Mens": ["Dalkey RC", "Fingal RC", ""],
-     }
-───────────────────────────────────────────── */
-const ECRC_RESULTS = {
-  2025: {
-    regattas: (function() {
-      // Load ECRC Race events from admin localStorage, fall back to defaults
-      const DEFAULT = [
-        { id: "stmichaels", short: "St. Michael's", date: "17 May", logo: "Clubs Logo/SMRC.jpg",             name: "St. Michael's RC" },
-        { id: "dalkey",     short: "Dalkey",         date: "30 May", logo: "Clubs Logo/Dalkey RC.jpg",        name: "Dalkey RC" },
-        { id: "skerries",   short: "Skerries",        date: "6 Jun",  logo: "Clubs Logo/Skerries RC.png",     name: "Skerries RC" },
-        { id: "stella",     short: "Stella Maris",    date: "21 Jun", logo: "Clubs Logo/Stella Maris RC.jpg", name: "Stella Maris RC" },
-        { id: "bray",       short: "Bray",            date: "27 Jun", logo: "Clubs Logo/Bray RC.jpg",         name: "Bray RC" },
-        { id: "stpats",     short: "St. Patricks",    date: "4 Jul",  logo: "Clubs Logo/St Pats RC.jpg",      name: "St. Patricks RC" },
-        { id: "fingal",     short: "Fingal",           date: "18 Jul", logo: "Clubs Logo/Fingal RC.jpg",       name: "Fingal RC" },
-        { id: "greystones", short: "Greystones",       date: "25 Jul", logo: "Clubs Logo/Greystones Tc.jpg",   name: "Greystones RC" },
-        { id: "wicklow",    short: "Wicklow",          date: "3 Aug",  logo: "Clubs Logo/Wicklow RC.jpg",      name: "Wicklow RC" },
-      ];
-      try {
-        const stored = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null');
-        if (!stored) return DEFAULT;
-        const races = stored.filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === 2025);
-        if (!races.length) return DEFAULT;
-        return races.map(e => {
-            const d = new Date(e.date);
-            const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
-            const short = e.club.replace(/ Rowing Club$/, '').replace(/ RC$/, '');
-            return { id: e.id, short, date: dateStr, logo: e.logo, name: e.club };
-          });
-      } catch { return DEFAULT; }
-    })(),
-    results: (function() {
-      try {
-        const all = JSON.parse(localStorage.getItem('ecrc_admin_results') || '{}');
-        // Support both year-nested {2025:{...}} and flat legacy {regattaId:{...}}
-        return all['2025'] || all;
-      } catch { return {}; }
-    })()
-  },
-  2026: {
-    regattas: (function() {
-      try {
-        const stored = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null');
-        if (!stored) return [];
-        return stored
-          .filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === 2026)
-          .map(e => {
-            const d = new Date(e.date);
-            const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
-            const short = e.club.replace(/ Rowing Club$/, '').replace(/ RC$/, '');
-            return { id: e.id, short, date: dateStr, logo: e.logo, name: e.club };
-          });
-      } catch { return []; }
-    })(),
-    results: (function() {
-      try { return (JSON.parse(localStorage.getItem('ecrc_admin_results') || '{}'))['2026'] || {}; } catch { return {}; }
-    })()
-  },
-  2024: {
-    regattas: (function() {
-      try {
-        const stored = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null');
-        if (!stored) return [];
-        return stored
-          .filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === 2024)
-          .map(e => {
-            const d = new Date(e.date);
-            const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
-            const short = e.club.replace(/ Rowing Club$/, '').replace(/ RC$/, '');
-            return { id: e.id, short, date: dateStr, logo: e.logo, name: e.club };
-          });
-      } catch { return []; }
-    })(),
-    results: (function() {
-      try { return (JSON.parse(localStorage.getItem('ecrc_admin_results') || '{}'))['2024'] || {}; } catch { return {}; }
-    })()
-  }
-};
+/* All results data loaded from Firestore; falls back to default schedule when Firestore has no events yet */
+const ECRC_RESULTS = {};
+
+const HOME_DEFAULT_EVENTS = [
+  { id: 'e1', type: 'ecrc_race', date: '2026-05-16', club: "St. Michael's RC", logo: 'Clubs Logo/SMRC.jpg' },
+  { id: 'e2', type: 'ecrc_race', date: '2026-05-29', club: 'Dalkey RC',         logo: 'Clubs Logo/Dalkey RC.jpg' },
+  { id: 'e3', type: 'ecrc_race', date: '2026-06-06', club: 'Skerries RC',       logo: 'Clubs Logo/Skerries RC.png' },
+  { id: 'e4', type: 'ecrc_race', date: '2026-06-20', club: 'Stella Maris RC',   logo: 'Clubs Logo/Stella Maris RC.jpg' },
+  { id: 'e5', type: 'ecrc_race', date: '2026-06-26', club: 'Bray RC',           logo: 'Clubs Logo/Bray RC.jpg' },
+  { id: 'e6', type: 'ecrc_race', date: '2026-07-04', club: 'Arklow RC',         logo: 'Clubs Logo/Arklow RC.jpg' },
+  { id: 'e7', type: 'ecrc_race', date: '2026-07-11', club: 'Fingal RC',         logo: 'Clubs Logo/Fingal RC.jpg' },
+  { id: 'e8', type: 'ecrc_race', date: '2026-07-25', club: 'Greystones RC',     logo: 'Clubs Logo/Greystones Tc.jpg' },
+  { id: 'e9', type: 'ecrc_race', date: '2026-08-01', club: 'Wicklow RC',        logo: 'Clubs Logo/Wicklow RC.jpg' },
+];
 
 const CATEGORIES = [
-  "Under 12s",
+  "Under 12 Boys",
+  "Under 12 Girls",
   "Under 14 Boys",
   "Under 14 Girls",
   "Under 16 Boys",
@@ -436,7 +307,7 @@ function medalCell(val, cls) {
              : `<td class="medal-pending">—</td>`;
 }
 
-function buildPanel(regatta, yearResults) {
+function buildPanel(regatta, yearResults, year) {
   const data = yearResults[regatta.id] || {};
   const rows = CATEGORIES.map(cat => {
     const m = data[cat] || [];
@@ -456,7 +327,7 @@ function buildPanel(regatta, yearResults) {
         </div>
         <div class="res-panel-info">
           <h3>${regatta.name} Regatta</h3>
-          <span>${regatta.date} &middot; 2025 Season</span>
+          <span>${regatta.date} &middot; ${year} Season</span>
         </div>
       </div>
       <div class="res-table-wrap">
@@ -492,7 +363,7 @@ function buildYearPanel(year) {
     </button>`).join('');
 
   const panels = yd.regattas.map((r, i) => {
-    const html = buildPanel(r, yd.results);
+    const html = buildPanel(r, yd.results, year);
     return i === 0 ? html.replace('class="regatta-panel"', 'class="regatta-panel active"') : html;
   }).join('');
 
@@ -514,17 +385,79 @@ function switchRegatta(year, id, btn) {
   document.getElementById('rpanels-' + year).querySelectorAll('.regatta-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
 }
 
-(function init() {
-  const YEAR_ORDER = ['2026', '2025', '2024'];
-  const container = document.getElementById('res-year-panels');
-  container.innerHTML = YEAR_ORDER.map(y => buildYearPanel(y)).join('');
-  // default: activate current year
-  const defaultYear = '2026';
-  document.querySelector(`.year-panel[data-year="${defaultYear}"]`).classList.add('active');
+(function loadFromFirestore() {
+  try {
+    const fbApp = firebase.apps.length ? firebase.apps[0] : firebase.initializeApp({
+      apiKey: "AIzaSyA8xqQ7QmL1yL4kCKwB8No5Qzhm7bj7NKw",
+      authDomain: "ercr-4e61e.firebaseapp.com",
+      projectId: "ercr-4e61e"
+    });
+    const db = firebase.firestore(fbApp);
 
-  document.getElementById('res-year-tabs').querySelectorAll('.res-year-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchYear(btn.dataset.year));
-  });
+    Promise.all([
+      db.collection('settings').doc('results').get(),
+      db.collection('settings').doc('events').get()
+    ]).then(([rSnap, eSnap]) => {
+      const allYears = new Set();
+
+      // Use Firestore events if available, otherwise fall back to default schedule
+      const rawEvents = (eSnap.exists && eSnap.data().data && eSnap.data().data.length)
+        ? eSnap.data().data
+        : HOME_DEFAULT_EVENTS;
+
+      rawEvents
+        .filter(e => e.type === 'ecrc_race')
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .forEach(e => {
+          const yr = String(new Date(e.date).getFullYear());
+          allYears.add(yr);
+          if (!ECRC_RESULTS[yr]) ECRC_RESULTS[yr] = { regattas: [], results: {} };
+          const d = new Date(e.date);
+          const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+          const short = e.club.replace(/ RC$/, '').replace(/ Rowing Club$/, '');
+          ECRC_RESULTS[yr].regattas.push({ id: e.id, short, date: dateStr, logo: e.logo, name: e.club });
+        });
+
+      // Attach results — only for years that have an ECRC Race event
+      if (rSnap.exists && rSnap.data().data) {
+        const rd = rSnap.data().data;
+        Object.keys(rd).forEach(yr => {
+          if (ECRC_RESULTS[yr]) {
+            ECRC_RESULTS[yr].results = rd[yr];
+          }
+        });
+      }
+
+      // Only render years that have at least one ECRC Race event
+      const yearOrder = Array.from(allYears)
+        .filter(y => ECRC_RESULTS[y] && ECRC_RESULTS[y].regattas.length > 0)
+        .sort((a, b) => b - a);
+
+      const tabsEl    = document.getElementById('res-year-tabs');
+      const container = document.getElementById('res-year-panels');
+
+      if (!yearOrder.length) {
+        tabsEl.innerHTML = '';
+        container.innerHTML = '<div class="res-empty"><p>No results available yet. Check back after the first regatta.</p></div>';
+        container.style.cssText = '';
+        return;
+      }
+
+      tabsEl.innerHTML = yearOrder.map((y, i) =>
+        `<button class="res-year-btn${i === 0 ? ' active' : ''}" data-year="${y}" onclick="switchYear('${y}')">${y}</button>`
+      ).join('');
+
+      container.style.cssText = '';
+      container.innerHTML = yearOrder.map(y => buildYearPanel(y)).join('');
+      document.querySelector(`.year-panel[data-year="${yearOrder[0]}"]`)?.classList.add('active');
+
+    }).catch(e => {
+      console.warn('Firestore results:', e);
+      const container = document.getElementById('res-year-panels');
+      container.style.cssText = '';
+      container.innerHTML = '<div class="res-empty"><p>Results temporarily unavailable.</p></div>';
+    });
+  } catch(e) { console.warn('Firebase init:', e); }
 })();
 </script>
 
@@ -547,9 +480,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>Arklow Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email Arklow RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Arklow RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Arklow RC on Instagram">&#9749;</a>
+          <a href="mailto:arklowrowingclub@gmail.com" class="club-social-link email" title="Email Arklow RC">&#9993;</a>
+          <a href="https://www.facebook.com/arklowrowingclub" class="club-social-link fb" target="_blank" rel="noopener" title="Arklow RC on Facebook">f</a>
+          <a href="https://www.instagram.com/arklowrowingclub/" class="club-social-link ig" target="_blank" rel="noopener" title="Arklow RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -560,9 +493,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>Bray Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email Bray RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Bray RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Bray RC on Instagram">&#9749;</a>
+          <a href="mailto:brayrowingclub@gmail.com" class="club-social-link email" title="Email Bray RC">&#9993;</a>
+          <a href="https://www.facebook.com/BrayRowingClub" class="club-social-link fb" target="_blank" rel="noopener" title="Bray RC on Facebook">f</a>
+          <a href="https://www.instagram.com/brayrowing/" class="club-social-link ig" target="_blank" rel="noopener" title="Bray RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -573,9 +506,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>Dalkey Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email Dalkey RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Dalkey RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Dalkey RC on Instagram">&#9749;</a>
+          <a href="mailto:dalkeyrowingclub1@gmail.com" class="club-social-link email" title="Email Dalkey RC">&#9993;</a>
+          <a href="https://www.facebook.com/dalkeyrowing" class="club-social-link fb" target="_blank" rel="noopener" title="Dalkey RC on Facebook">f</a>
+          <a href="https://www.instagram.com/dalkeyrowingclub/" class="club-social-link ig" target="_blank" rel="noopener" title="Dalkey RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -586,9 +519,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>Fingal Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email Fingal RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Fingal RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Fingal RC on Instagram">&#9749;</a>
+          <a href="mailto:fingalrowingclub@gmail.com" class="club-social-link email" title="Email Fingal RC">&#9993;</a>
+          <a href="https://www.facebook.com/FingalRowingClub" class="club-social-link fb" target="_blank" rel="noopener" title="Fingal RC on Facebook">f</a>
+          <a href="https://www.instagram.com/fingalrowingclub/" class="club-social-link ig" target="_blank" rel="noopener" title="Fingal RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -599,9 +532,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>Greystones Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email Greystones RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Greystones RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Greystones RC on Instagram">&#9749;</a>
+          <a href="mailto:Greystonesrc@gmail.com" class="club-social-link email" title="Email Greystones RC">&#9993;</a>
+          <a href="https://www.facebook.com/profile.php?id=100057102174497" class="club-social-link fb" target="_blank" rel="noopener" title="Greystones RC on Facebook">f</a>
+          <a href="https://www.instagram.com/greystonesrowingclub/" class="club-social-link ig" target="_blank" rel="noopener" title="Greystones RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -612,9 +545,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>Skerries Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email Skerries RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Skerries RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Skerries RC on Instagram">&#9749;</a>
+          <a href="mailto:secretary@skerriesrowingclub.com" class="club-social-link email" title="Email Skerries RC">&#9993;</a>
+          <a href="https://www.facebook.com/skerriesrowingclub" class="club-social-link fb" target="_blank" rel="noopener" title="Skerries RC on Facebook">f</a>
+          <a href="https://www.instagram.com/skerries_rowing_club/" class="club-social-link ig" target="_blank" rel="noopener" title="Skerries RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -625,9 +558,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>St. Michael's Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email St. Michael's RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="St. Michael's RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="St. Michael's RC on Instagram">&#9749;</a>
+          <a href="mailto:captain@dunlaoghairerowing.com" class="club-social-link email" title="Email St. Michael's RC">&#9993;</a>
+          <a href="https://www.facebook.com/dunlaoghairerowing" class="club-social-link fb" target="_blank" rel="noopener" title="St. Michael's RC on Facebook">f</a>
+          <a href="https://www.instagram.com/st.michaels_rowing/" class="club-social-link ig" target="_blank" rel="noopener" title="St. Michael's RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -638,9 +571,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>St. Patricks Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email St. Patricks RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="St. Patricks RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="St. Patricks RC on Instagram">&#9749;</a>
+          <a href="mailto:patricksrowingclub@gmail.com" class="club-social-link email" title="Email St. Patricks RC">&#9993;</a>
+          <a href="https://www.facebook.com/stpatricksrowingclub" class="club-social-link fb" target="_blank" rel="noopener" title="St. Patricks RC on Facebook">f</a>
+          <a href="https://www.instagram.com/stpatricksrowingclub/" class="club-social-link ig" target="_blank" rel="noopener" title="St. Patricks RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -651,9 +584,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>Stella Maris Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email Stella Maris RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Stella Maris RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Stella Maris RC on Instagram">&#9749;</a>
+          <a href="mailto:stellamarisrc.sec@gmail.com" class="club-social-link email" title="Email Stella Maris RC">&#9993;</a>
+          <a href="https://www.facebook.com/stellamarisrowingclub" class="club-social-link fb" target="_blank" rel="noopener" title="Stella Maris RC on Facebook">f</a>
+          <a href="https://www.instagram.com/stellamarisrowingclub/" class="club-social-link ig" target="_blank" rel="noopener" title="Stella Maris RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -664,9 +597,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>Vartry Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email Vartry RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Vartry RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Vartry RC on Instagram">&#9749;</a>
+          <a href="mailto:Johnflynner@gmail.com" class="club-social-link email" title="Email Vartry RC">&#9993;</a>
+          <a href="https://www.facebook.com/vartryrowingclubwicklow" class="club-social-link fb" target="_blank" rel="noopener" title="Vartry RC on Facebook">f</a>
+          <a href="https://www.instagram.com/vartryrowingclubwicklow/" class="club-social-link ig" target="_blank" rel="noopener" title="Vartry RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -677,9 +610,9 @@ function switchRegatta(year, id, btn) {
         </div>
         <h3>Wicklow Rowing Club</h3>
         <div class="club-social">
-          <a href="mailto:#" class="club-social-link email" title="Email Wicklow RC">&#9993;</a>
-          <a href="#" class="club-social-link fb" target="_blank" rel="noopener" title="Wicklow RC on Facebook">f</a>
-          <a href="#" class="club-social-link ig" target="_blank" rel="noopener" title="Wicklow RC on Instagram">&#9749;</a>
+          <a href="mailto:Secretary@wicklowrowingclub.ie" class="club-social-link email" title="Email Wicklow RC">&#9993;</a>
+          <a href="https://www.facebook.com/WicklowRowingClub" class="club-social-link fb" target="_blank" rel="noopener" title="Wicklow RC on Facebook">f</a>
+          <a href="https://www.instagram.com/wicklowrowingclub/" class="club-social-link ig" target="_blank" rel="noopener" title="Wicklow RC on Instagram">&#9749;</a>
         </div>
       </div>
 
@@ -701,13 +634,10 @@ function switchRegatta(year, id, btn) {
           <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC Logo" />
           <span class="footer-logo-text">East Coast Rowing Council</span>
         </div>
-        <p>The governing body for coastal rowing on the East Coast of Ireland, covering counties Dublin, Wicklow, and North Wexford. Affiliated to the Irish Coastal Rowing Federation.</p>
+        <p>The East Coast Rowing Council is the organising body for traditional skiff rowing on the East Coast.</p>
         <div class="social-links">
           <a href="https://www.facebook.com/EastCoastRowingCouncil" class="social-link" title="Facebook" target="_blank" rel="noopener">f</a>
-          <a href="#" class="social-link" title="X / Twitter">&#120143;</a>
           <a href="https://www.instagram.com/east.coastrowing/" class="social-link" title="Instagram" target="_blank" rel="noopener">&#9749;</a>
-          <a href="#" class="social-link" title="YouTube">&#9654;</a>
-          <a href="#" class="social-link" title="LinkedIn">in</a>
         </div>
       </div>
 
@@ -725,19 +655,6 @@ function switchRegatta(year, id, btn) {
         </ul>
       </div>
 
-      <!-- Resources -->
-      <div class="footer-col">
-        <h4>Resources</h4>
-        <ul>
-          <li><a href="#">Member Portal</a></li>
-          <li><a href="#">Event Registration</a></li>
-          <li><a href="#">Results Archive</a></li>
-          <li><a href="#">Coaching Licences</a></li>
-          <li><a href="#">Volunteer</a></li>
-          <li><a href="#">Newsletter</a></li>
-        </ul>
-      </div>
-
       <!-- Contact -->
       <div class="footer-col">
         <h4>Contact</h4>
@@ -746,7 +663,6 @@ function switchRegatta(year, id, btn) {
           <li><a href="privacy-policy.html">Privacy Policy</a></li>
           <li><a href="terms.html">Terms of Use</a></li>
           <li><a href="safeguarding.html">Safeguarding Policy</a></li>
-          <li><a href="#">Media Enquiries</a></li>
         </ul>
       </div>
 

@@ -7,6 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -222,9 +227,17 @@
     .account-info strong { display: block; font-size: 0.85rem; color: var(--navy); }
     .account-info span { font-size: 0.75rem; color: var(--muted); }
     .role-badge { font-size: 0.65rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
-    .role-badge.admin { background: rgba(200,153,42,0.14); color: var(--gold); }
-    .role-badge.club  { background: rgba(13,34,68,0.08); color: var(--navy); }
+    .role-badge.admin    { background: rgba(200,153,42,0.14); color: var(--gold); }
+    .role-badge.club     { background: rgba(13,34,68,0.08); color: var(--navy); }
+    .role-badge.personal { background: rgba(22,163,74,0.1); color: var(--success); }
     .security-note { background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.18); border-radius: 8px; padding: 10px 14px; font-size: 0.75rem; color: #991b1b; margin-bottom: 20px; }
+    /* ── Profile results ── */
+    .medal-result-row { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--off-white); border:1px solid var(--border); border-radius:8px; }
+    .medal-icon { font-size:1.5rem; width:36px; text-align:center; flex-shrink:0; }
+    .medal-info { flex:1; }
+    .medal-info strong { display:block; font-size:0.85rem; color:var(--navy); font-weight:600; }
+    .medal-info span { font-size:0.75rem; color:var(--muted); }
+    .medal-pos { font-size:0.72rem; font-weight:700; white-space:nowrap; }
 
     /* ── Crew subtabs ── */
     .crew-subtabs { display: flex; gap: 0; margin-bottom: 0; }
@@ -349,6 +362,13 @@
     <button class="nav-btn" data-roles="admin,club" onclick="showTab('crews', this)">
       <span class="nav-icon">🚣</span> Crew List
     </button>
+    <button class="nav-btn" data-roles="admin,club" onclick="showTab('roster', this)">
+      <span class="nav-icon">🏃</span> Club Roster
+    </button>
+    <div class="sidebar-label" data-roles="personal">My Account</div>
+    <button class="nav-btn" data-roles="personal" onclick="showTab('profile', this)">
+      <span class="nav-icon">🏅</span> My Results
+    </button>
     <div class="sidebar-label" data-roles="admin">Settings</div>
     <button class="nav-btn" data-roles="admin" onclick="showTab('accounts', this)">
       <span class="nav-icon">👤</span> Accounts
@@ -365,7 +385,7 @@
 <div class="main">
   <div class="topbar">
     <h1 id="topbar-title">Regatta Results</h1>
-    <span class="topbar-badge">Local Preview</span>
+    <span class="topbar-badge" id="topbar-badge">&#9654; Connecting…</span>
   </div>
 
   <div class="content">
@@ -620,10 +640,85 @@
     <div id="tab-accounts" class="tab-panel">
 
       <div class="card">
-        <div class="card-title">Admin Accounts</div>
-        <div class="card-sub">Accounts that can log in to this admin panel.</div>
-        <div class="security-note">&#9888; Passwords are stored locally in this browser. Full account security will be enabled when Firebase is set up.</div>
-        <div class="item-list" id="accounts-list"></div>
+        <div class="card-title">Accounts</div>
+        <div class="card-sub">Secured with Firebase Authentication — passwords are never stored in the browser.</div>
+
+        <!-- Admin always at top -->
+        <div id="accounts-admin-list"></div>
+
+        <hr class="divider" style="margin:18px 0;" />
+
+        <!-- Club tabs -->
+        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:10px;">Club Accounts</div>
+        <div id="accounts-club-tabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;"></div>
+        <div id="accounts-club-list"></div>
+      </div>
+
+      <!-- Edit panel (shown inline when Edit is clicked) -->
+      <div class="card" id="club-edit-card" style="display:none;">
+        <div class="card-title" id="club-edit-title">Edit Club</div>
+        <div class="card-sub">Update details below then click Save.</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+          <img id="cedit-current-photo" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border);display:none;" />
+          <div id="cedit-photo-placeholder" style="width:56px;height:56px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:#fff;flex-shrink:0;">?</div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" id="cedit-name" placeholder="e.g. Bray RC" />
+          </div>
+          <div class="field">
+            <label>Assigned Club</label>
+            <select id="cedit-club">
+              <option value="">— not set —</option>
+              <option>Arklow RC</option>
+              <option>Bray RC</option>
+              <option>Dalkey RC</option>
+              <option>Fingal RC</option>
+              <option>Greystones RC</option>
+              <option>Skerries RC</option>
+              <option>St. Michael's RC</option>
+              <option>St. Patricks RC</option>
+              <option>Stella Maris RC</option>
+              <option>Vartry RC</option>
+              <option>Wicklow RC</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Login Email</label>
+            <input type="email" id="cedit-email" placeholder="email@example.com" autocomplete="off"
+              oninput="document.getElementById('cedit-current-pass-row').style.display = this.value.toLowerCase() !== (window._ceditOrigEmail||'') ? '' : 'none';" />
+          </div>
+          <div class="field">
+            <label>New Password <span style="font-size:0.7rem;font-weight:400;color:var(--muted);">(leave blank to keep)</span></label>
+            <input type="password" id="cedit-password" placeholder="Leave blank to keep unchanged" autocomplete="new-password" />
+          </div>
+        </div>
+        <div class="form-row" id="cedit-current-pass-row" style="display:none;">
+          <div class="field">
+            <label>Current Password <span style="font-size:0.7rem;font-weight:400;color:var(--danger);">Required to change email</span></label>
+            <input type="password" id="cedit-current-password" placeholder="Enter the account's current password" autocomplete="off" />
+          </div>
+          <div class="field"></div>
+        </div>
+        <div id="cedit-cred-note" style="display:none;font-size:0.75rem;color:var(--navy);background:rgba(200,153,42,0.08);border:1px solid rgba(200,153,42,0.3);border-radius:6px;padding:8px 12px;margin-bottom:12px;line-height:1.5;"></div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Profile Picture / Club Logo</label>
+            <label class="file-upload-label">
+              &#128247; Choose New Image
+              <input type="file" id="cedit-photo-file" accept="image/*" onchange="document.getElementById('cedit-photo-name').textContent = this.files[0]?.name || ''" />
+            </label>
+            <span class="file-chosen" id="cedit-photo-name"></span>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-primary" onclick="saveClubEdit()">&#10003; Save Changes</button>
+          <button class="btn-secondary" onclick="sendClubPasswordReset()">&#9993; Send Password Reset</button>
+          <button class="btn-danger" onclick="cancelClubEdit()">&#10005; Cancel</button>
+        </div>
       </div>
 
       <div class="card">
@@ -675,7 +770,120 @@
             </div>
           </div>
         </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Profile Picture (optional — club logo)</label>
+            <label class="file-upload-label">
+              &#128247; Choose Image
+              <input type="file" id="acc-photo-file" accept="image/*" onchange="document.getElementById('acc-photo-name').textContent = this.files[0]?.name || ''" />
+            </label>
+            <span class="file-chosen" id="acc-photo-name"></span>
+          </div>
+        </div>
         <button class="btn-primary" onclick="addAccount()">+ Create Account</button>
+      </div>
+
+    </div>
+
+    <!-- ── Roster Tab ── -->
+    <div id="tab-roster" class="tab-panel">
+
+      <div class="card">
+        <div class="card-title">Club Roster</div>
+        <div class="card-sub" id="roster-card-sub">Manage individual rower accounts for your club. Each rower gets their own login to view race records.</div>
+
+        <!-- Admin only: club filter -->
+        <div id="roster-club-filter-row" style="display:none;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:0.75rem;font-weight:600;color:var(--muted);">Filter by club:</span>
+          <select id="roster-club-filter" onchange="renderRoster()" style="font-size:0.82rem;padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;color:var(--navy);min-width:160px;">
+            <option value="">All Clubs</option>
+          </select>
+        </div>
+
+        <div id="roster-list"><div class="empty-state">Loading…</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Add Rower</div>
+        <div class="card-sub">Create a personal login for a rower in your club. They can log in to view their race records.</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" id="roster-name" placeholder="e.g. Jane Murphy" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label>Email Address</label>
+            <input type="email" id="roster-email" placeholder="jane@example.com" autocomplete="off" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Date of Birth</label>
+            <input type="date" id="roster-dob" />
+          </div>
+          <div class="field" id="roster-admin-club-field" style="display:none;">
+            <label>Club</label>
+            <select id="roster-admin-club">
+              <option value="">Select club…</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Race Categories <span style="font-size:0.7rem;font-weight:400;color:var(--muted);">(hold Ctrl / ⌘ to select multiple)</span></label>
+            <select id="roster-categories" multiple style="height:130px;"></select>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Profile Photo <span style="font-size:0.7rem;font-weight:400;color:var(--muted);">(optional)</span></label>
+            <label class="file-upload-label">
+              &#128247; Choose Photo
+              <input type="file" id="roster-photo-file" accept="image/*" onchange="document.getElementById('roster-photo-name').textContent = this.files[0]?.name || ''" />
+            </label>
+            <span class="file-chosen" id="roster-photo-name"></span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Password <span style="font-size:0.7rem;font-weight:400;color:var(--muted);">(min 6 characters)</span></label>
+            <input type="password" id="roster-password" placeholder="Choose a password" autocomplete="new-password" />
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end;">
+            <button class="btn-primary" style="width:100%;justify-content:center;" onclick="addRosterMember()">+ Add Rower</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Profile Tab (personal rowers) ── -->
+    <div id="tab-profile" class="tab-panel">
+
+      <!-- Profile card -->
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+          <div id="profile-avatar-wrap" style="position:relative;flex-shrink:0;">
+            <img id="profile-photo" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--border);display:none;" />
+            <div id="profile-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:#fff;">?</div>
+          </div>
+          <div style="flex:1;min-width:160px;">
+            <div class="card-title" id="profile-name-title" style="margin-bottom:4px;">My Profile</div>
+            <div style="font-size:0.8rem;color:var(--muted);margin-bottom:6px;" id="profile-club-sub"></div>
+            <div id="profile-meta" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+          </div>
+        </div>
+        <div id="profile-categories-wrap" style="margin-top:16px;display:none;">
+          <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;">Race Categories</div>
+          <div id="profile-categories" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+      </div>
+
+      <!-- Results card -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:4px;">Race Results</div>
+        <div class="card-sub">Results for your club across all completed regattas.</div>
+        <div id="profile-results-content"><div class="empty-state">Loading results…</div></div>
       </div>
 
     </div>
@@ -687,32 +895,143 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* ── Firebase init ── */
+const firebaseConfig = {
+  apiKey: "AIzaSyA8xqQ7QmL1yL4kCKwB8No5Qzhm7bj7NKw",
+  authDomain: "ercr-4e61e.firebaseapp.com",
+  projectId: "ercr-4e61e",
+  storageBucket: "ercr-4e61e.firebasestorage.app",
+  messagingSenderId: "1051164701216",
+  appId: "1:1051164701216:web:b838c4e67a5f1c38a64245"
+};
+firebase.initializeApp(firebaseConfig);
+const fbAuth    = firebase.auth();
+const db        = firebase.firestore();
+const fbStorage = firebase.storage();
+
 /* ── Auth guard + role-based UI ── */
-const authRaw = localStorage.getItem('ecrc_auth');
-if (!authRaw) { window.location.href = 'login.html'; }
-const auth = JSON.parse(authRaw || '{}');
-const userRole = auth.role || 'admin';
-const userClub = auth.club || '';
+let userRole    = 'club';
+let userClub    = '';
+let currentUser = null;
 
-document.getElementById('user-name').textContent  = auth.name  || 'Admin';
-document.getElementById('user-email').textContent = auth.email || '';
+document.body.style.visibility = 'hidden';
 
-// Show/hide sidebar items based on role
-document.querySelectorAll('[data-roles]').forEach(el => {
-  const allowed = el.dataset.roles.split(',');
-  if (!allowed.includes(userRole)) el.style.display = 'none';
+fbAuth.onAuthStateChanged(async (user) => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  currentUser = user;
+
+  // Blocklist check — removed accounts are blocked even if their Firebase Auth entry persists
+  try {
+    const blockSnap = await db.collection('settings').doc('blocklist').get();
+    if (blockSnap.exists && (blockSnap.data().uids || []).includes(user.uid)) {
+      await fbAuth.signOut();
+      return;
+    }
+  } catch (e) { console.warn('Blocklist check:', e); }
+
+  // Sync public settings from Firestore → localStorage
+  try {
+    const [rSnap, eSnap] = await Promise.all([
+      db.collection('settings').doc('results').get(),
+      db.collection('settings').doc('events').get()
+    ]);
+    if (rSnap.exists && rSnap.data().data) localStorage.setItem('ecrc_admin_results', JSON.stringify(rSnap.data().data));
+    if (eSnap.exists && eSnap.data().data) {
+      localStorage.setItem('ecrc_admin_events', JSON.stringify(eSnap.data().data));
+    } else {
+      // No events in Firestore yet — push defaults so the public home page can read them
+      await db.collection('settings').doc('events').set({ data: DEFAULT_EVENTS }).catch(e2 => console.warn('Bootstrap events:', e2));
+      localStorage.setItem('ecrc_admin_events', JSON.stringify(DEFAULT_EVENTS));
+    }
+  } catch (e) { console.warn('Settings sync:', e); }
+
+  // Sync crew entries and lane data from Firestore → localStorage
+  try {
+    const [crewSnap, laneSnap] = await Promise.all([
+      db.collection('settings').doc('crews').get(),
+      db.collection('settings').doc('laneData').get()
+    ]);
+    if (crewSnap.exists && crewSnap.data().data) {
+      localStorage.setItem('ecrc_admin_crews', JSON.stringify(crewSnap.data().data));
+    } else {
+      // First login — push any existing local crew data up to Firestore
+      const local = JSON.parse(localStorage.getItem('ecrc_admin_crews') || '[]');
+      if (local.length) db.collection('settings').doc('crews').set({ data: local }).catch(() => {});
+    }
+    if (laneSnap.exists) {
+      const ld = laneSnap.data();
+      if (ld.lanes) localStorage.setItem('ecrc_admin_lanes', JSON.stringify(ld.lanes));
+      if (ld.laneStarts) Object.entries(ld.laneStarts).forEach(([k, v]) =>
+        localStorage.setItem(`ecrc_lane_starts_${k}`, JSON.stringify(v)));
+      if (ld.crewLocks) Object.entries(ld.crewLocks).forEach(([k, v]) =>
+        v ? localStorage.setItem(`ecrc_crew_lock_${k}`, '1') : localStorage.removeItem(`ecrc_crew_lock_${k}`));
+    } else {
+      // First login — push any existing local lane data up to Firestore
+      const localLanes = localStorage.getItem('ecrc_admin_lanes');
+      if (localLanes) syncLaneDataToFirestore();
+    }
+  } catch (e) { console.warn('Crew/lane sync:', e); }
+
+  try {
+    const snap = await db.collection('users').doc(user.uid).get();
+    if (snap.exists) {
+      const p = snap.data();
+      userRole = p.role || 'club';
+      userClub = p.club || '';
+      document.getElementById('user-name').textContent  = p.name  || user.email;
+      document.getElementById('user-email').textContent = user.email;
+    } else {
+      userRole = 'admin';
+      document.getElementById('user-name').textContent  = user.email;
+      document.getElementById('user-email').textContent = user.email;
+    }
+  } catch (err) {
+    console.error('Profile load error:', err);
+    userRole = 'admin';
+    document.getElementById('user-name').textContent  = user.email;
+    document.getElementById('user-email').textContent = user.email;
+  }
+
+  document.body.style.visibility = '';
+  const badge = document.getElementById('topbar-badge');
+  if (badge) badge.textContent = '🔥 Firebase';
+
+  document.querySelectorAll('[data-roles]').forEach(el => {
+    const allowed = el.dataset.roles.split(',');
+    if (!allowed.includes(userRole)) el.style.display = 'none';
+  });
+
+  if (userRole === 'personal') {
+    const profileBtn = document.querySelector('.nav-btn[data-roles="personal"]');
+    showTab('profile', profileBtn);
+  } else if (userRole === 'club') {
+    const crewBtn = document.querySelector('.nav-btn[data-roles="admin,club"]');
+    showTab('crews', crewBtn);
+  } else {
+    const resultsBtn = document.querySelector('.nav-btn[data-roles="admin"]');
+    showTab('results', resultsBtn);
+    buildRegattaSelect();
+    loadResultsTable();
+    renderEvents();
+    renderNews();
+    renderRulebooks();
+    renderAccounts();
+  }
+  initCrewsTab();
+  const today = new Date().toISOString().split('T')[0];
+  if (document.getElementById('news-date')) document.getElementById('news-date').value = today;
 });
 
 function logout() {
-  localStorage.removeItem('ecrc_auth');
-  window.location.href = 'login.html';
+  fbAuth.signOut().then(() => { window.location.href = 'login.html'; });
 }
 
 /* ── Tab switching ── */
 const TAB_TITLES = {
   results: 'Regatta Results', events: 'Events & Calendar',
   news: 'News & Announcements', rulebook: 'Rulebook Library',
-  crews: 'Crew List', accounts: 'Accounts'
+  crews: 'Crew List', accounts: 'Accounts',
+  roster: 'Club Roster', profile: 'My Results'
 };
 function showTab(name, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -720,6 +1039,9 @@ function showTab(name, btn) {
   document.getElementById('tab-' + name).classList.add('active');
   if (btn) btn.classList.add('active');
   document.getElementById('topbar-title').textContent = TAB_TITLES[name] || name;
+  if (name === 'accounts') renderAccounts();
+  if (name === 'roster')   initRosterTab();
+  if (name === 'profile')  renderProfile();
 }
 
 /* ── Toast ── */
@@ -733,33 +1055,17 @@ function showToast(msg, type = 'success') {
 /* ════════════════════════════════
    RESULTS
 ════════════════════════════════ */
-const DEFAULT_REGATTAS_2025 = [
-  { id: 'stmichaels', name: "St. Michael's RC", date: '17 May', logo: 'Clubs Logo/SMRC.jpg' },
-  { id: 'dalkey',     name: 'Dalkey RC',         date: '30 May', logo: 'Clubs Logo/Dalkey RC.jpg' },
-  { id: 'skerries',   name: 'Skerries RC',        date: '6 Jun',  logo: 'Clubs Logo/Skerries RC.png' },
-  { id: 'stella',     name: 'Stella Maris RC',    date: '21 Jun', logo: 'Clubs Logo/Stella Maris RC.jpg' },
-  { id: 'bray',       name: 'Bray RC',            date: '27 Jun', logo: 'Clubs Logo/Bray RC.jpg' },
-  { id: 'stpats',     name: 'St. Patricks RC',    date: '4 Jul',  logo: 'Clubs Logo/St Pats RC.jpg' },
-  { id: 'fingal',     name: 'Fingal RC',          date: '18 Jul', logo: 'Clubs Logo/Fingal RC.jpg' },
-  { id: 'greystones', name: 'Greystones RC',      date: '25 Jul', logo: 'Clubs Logo/Greystones Tc.jpg' },
-  { id: 'wicklow',    name: 'Wicklow RC',         date: '3 Aug',  logo: 'Clubs Logo/Wicklow RC.jpg' },
-];
-
 function getRegattasForYear(year) {
-  const events = getEvents();
-  const races = events.filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === parseInt(year));
-  if (!races.length && year == 2025) return DEFAULT_REGATTAS_2025;
-  if (!races.length) return [];
+  const races = getEvents().filter(e => e.type === 'ecrc_race' && new Date(e.date).getFullYear() === parseInt(year));
   return races.map(e => {
     const d = new Date(e.date);
     const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
-    const id = e.id || (e.club.toLowerCase().replace(/[^a-z]/g,'').slice(0,10));
-    return { id, name: e.club, date: dateStr, logo: e.logo };
+    return { id: e.id, name: e.club, date: dateStr, logo: e.logo };
   });
 }
 
 const CATEGORIES = [
-  'Under 12s','Under 14 Boys','Under 14 Girls','Under 16 Boys','Under 16 Girls',
+  'Under 12 Boys','Under 12 Girls','Under 14 Boys','Under 14 Girls','Under 16 Boys','Under 16 Girls',
   'Under 18 Boys','Under 18 Girls','Under 21 Mens','Under 21 Womens','Mixed',
   "Novice Men's","Novice Women's",'Intermediate Mens',"Intermediate Women's",
   'Junior Mens','Junior Womens','Senior Mens',"Senior Women's",'Masters Mens','Masters Womens',
@@ -789,7 +1095,7 @@ function buildRegattaSelect() {
   const sel = document.getElementById('results-regatta-select');
   sel.innerHTML = regattas.length
     ? regattas.map(r => `<option value="${r.id}">${r.name} — ${r.date}</option>`).join('')
-    : '<option value="">No ECRC races found for this year</option>';
+    : '<option value="">— Add ECRC Race events in the Events tab first —</option>';
 }
 
 function clubOptions(selected) {
@@ -844,7 +1150,9 @@ function saveResults() {
     if (allData[year][regattaId][cat].every(v => !v)) delete allData[year][regattaId][cat];
   });
   localStorage.setItem('ecrc_admin_results', JSON.stringify(allData));
-  showToast('Results saved successfully');
+  db.collection('settings').doc('results').set({ data: allData })
+    .then(() => showToast('Results saved & published'))
+    .catch(e => { showToast('Saved locally — Firestore error: ' + e.message, 'error'); });
 }
 
 /* ════════════════════════════════
@@ -865,7 +1173,10 @@ const DEFAULT_EVENTS = [
 function getEvents() {
   try { return JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null') || DEFAULT_EVENTS; } catch { return DEFAULT_EVENTS; }
 }
-function saveEventsData(events) { localStorage.setItem('ecrc_admin_events', JSON.stringify(events)); }
+function saveEventsData(events) {
+  localStorage.setItem('ecrc_admin_events', JSON.stringify(events));
+  db.collection('settings').doc('events').set({ data: events }).catch(console.error);
+}
 
 let editingEventId = null;
 let activeEventsYear = null;
@@ -1138,46 +1449,109 @@ function removeRulebook(id) {
 }
 
 /* ════════════════════════════════
-   ACCOUNTS
+   ACCOUNTS  (Firebase Auth + Firestore)
 ════════════════════════════════ */
-const DEFAULT_ACCOUNTS = [
-  { id: 'a0',  name: 'ECRC Admin',      email: 'eastcoastrowingireland@gmail.com', password: '123',          role: 'admin', club: '' },
-  { id: 'ac1', name: 'Arklow RC',       email: 'arklow@ecrc.ie',                  password: 'Arklow2026',   role: 'club',  club: 'Arklow RC' },
-  { id: 'ac2', name: 'Bray RC',         email: 'bray@ecrc.ie',                    password: 'Bray2026',     role: 'club',  club: 'Bray RC' },
-  { id: 'ac3', name: 'Dalkey RC',       email: 'dalkey@ecrc.ie',                  password: 'Dalkey2026',   role: 'club',  club: 'Dalkey RC' },
-  { id: 'ac4', name: 'Fingal RC',       email: 'fingal@ecrc.ie',                  password: 'Fingal2026',   role: 'club',  club: 'Fingal RC' },
-  { id: 'ac5', name: 'Greystones RC',   email: 'greystones@ecrc.ie',              password: 'Grey2026',     role: 'club',  club: 'Greystones RC' },
-  { id: 'ac6', name: 'Skerries RC',     email: 'skerries@ecrc.ie',               password: 'Skerries2026', role: 'club',  club: 'Skerries RC' },
-  { id: 'ac7', name: "St. Michael's RC", email: 'smrc@ecrc.ie',                  password: 'SMRC2026',     role: 'club',  club: "St. Michael's RC" },
-  { id: 'ac8', name: 'St. Patricks RC', email: 'stpats@ecrc.ie',                 password: 'StPats2026',   role: 'club',  club: 'St. Patricks RC' },
-  { id: 'ac9', name: 'Stella Maris RC', email: 'stella@ecrc.ie',                 password: 'Stella2026',   role: 'club',  club: 'Stella Maris RC' },
-  { id: 'ac10',name: 'Vartry RC',       email: 'vartry@ecrc.ie',                  password: 'Vartry2026',   role: 'club',  club: 'Vartry RC' },
-  { id: 'ac11',name: 'Wicklow RC',      email: 'wicklow@ecrc.ie',                password: 'Wicklow2026',  role: 'club',  club: 'Wicklow RC' },
-];
-
-function getAccounts() {
-  try { return JSON.parse(localStorage.getItem('ecrc_admin_accounts') || 'null') || DEFAULT_ACCOUNTS; } catch { return DEFAULT_ACCOUNTS; }
-}
-function saveAccountsData(a) { localStorage.setItem('ecrc_admin_accounts', JSON.stringify(a)); }
-
 const ROLE_LABELS = { admin: 'Admin', club: 'Club', personal: 'Personal' };
 
-function renderAccounts() {
-  const accounts = getAccounts();
-  const list = document.getElementById('accounts-list');
-  list.innerHTML = accounts.length ? accounts.map(a => `
-    <div class="account-row">
-      <div class="account-avatar">${a.name.charAt(0).toUpperCase()}</div>
-      <div class="account-info">
-        <strong>${a.name}</strong>
-        <span>${a.email || '— email not set —'}${a.club ? ' &middot; ' + a.club : ''}</span>
-      </div>
-      <span class="role-badge ${a.role}">${ROLE_LABELS[a.role] || a.role}</span>
-      ${a.id === 'a0'
-        ? '<span style="font-size:0.72rem;color:var(--muted);">Default</span>'
-        : `<button class="btn-danger btn-sm" onclick="removeAccount('${a.id}')">&#10005; Remove</button>`}
-    </div>`).join('')
-    : '<div class="empty-state">No accounts found.</div>';
+async function renderAccounts() {
+  const adminList = document.getElementById('accounts-admin-list');
+  const clubList  = document.getElementById('accounts-club-list');
+  if (!adminList || !clubList) return;
+  adminList.innerHTML = clubList.innerHTML = '<div class="empty-state">Loading…</div>';
+  try {
+    const snap = await db.collection('users').get();
+    const docs  = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    const admins = docs.filter(d => d.role === 'admin');
+    const clubs  = docs.filter(d => d.role === 'club');
+
+    // ── Admins ──
+    adminList.innerHTML = admins.length
+      ? '<div class="item-list">' + admins.map(a => {
+          const isSelf = currentUser && currentUser.uid === a.uid;
+          return `<div class="account-row">
+            <div class="account-avatar">${(a.name || '?').charAt(0).toUpperCase()}</div>
+            <div class="account-info">
+              <strong>${escHtml(a.name || '—')}</strong>
+              <span>${escHtml(a.email || '—')}</span>
+            </div>
+            <span class="role-badge admin">Admin</span>
+            ${isSelf
+              ? '<span style="font-size:0.72rem;color:var(--muted);">You</span>'
+              : `<button class="btn-danger btn-sm" onclick="removeAccount('${a.uid}')">&#10005; Remove</button>`}
+          </div>`;
+        }).join('') + '</div>'
+      : '<div class="empty-state">No admin accounts.</div>';
+
+    // ── Clubs as tabs ──
+    const tabsEl = document.getElementById('accounts-club-tabs');
+    if (!clubs.length) {
+      if (tabsEl) tabsEl.innerHTML = '';
+      clubList.innerHTML = '<div class="empty-state">No club accounts yet. Create them below.</div>';
+      return;
+    }
+
+    const groups = {};
+    clubs.forEach(c => {
+      const key = c.club || '— Unassigned —';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(c);
+    });
+    const sorted = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+    const firstClub = sorted[0][0];
+
+    // Build tab buttons
+    if (tabsEl) {
+      tabsEl.innerHTML = sorted.map(([clubName]) => {
+        const logoSrc = CLUB_LOGOS[clubName] || '';
+        const logoImg = logoSrc ? `<img src="${logoSrc}" style="width:16px;height:16px;border-radius:2px;object-fit:contain;margin-right:5px;vertical-align:middle;" />` : '';
+        return `<button class="acc-club-tab${clubName === firstClub ? ' active' : ''}"
+          onclick="showClubTab('${escHtml(clubName)}', this)"
+          style="display:inline-flex;align-items:center;padding:7px 14px;border-radius:20px;border:1px solid var(--border);
+            background:${clubName === firstClub ? 'var(--navy)' : 'var(--off-white)'};
+            color:${clubName === firstClub ? '#fff' : 'var(--navy)'};
+            font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;
+            transition:background 0.15s,color 0.15s;">
+          ${logoImg}${escHtml(clubName)}
+        </button>`;
+      }).join('');
+    }
+
+    // Build all club panels (only first visible)
+    clubList.innerHTML = sorted.map(([clubName, members]) => {
+      const rows = members.map(m => {
+        const avatar = m.logoUrl
+          ? `<img src="${escHtml(m.logoUrl)}" class="item-logo" style="border-radius:50%;" />`
+          : `<div class="account-avatar">${(m.name || '?').charAt(0).toUpperCase()}</div>`;
+        return `<div class="account-row">
+          ${avatar}
+          <div class="account-info">
+            <strong>${escHtml(m.name || '—')}</strong>
+            <span>${escHtml(m.email || '—')}</span>
+          </div>
+          <span class="role-badge club">Club</span>
+          <button class="btn-secondary btn-sm" onclick="editClub('${m.uid}')">&#9998; Edit</button>
+          <button class="btn-danger btn-sm" onclick="removeAccount('${m.uid}')">&#10005; Remove</button>
+        </div>`;
+      }).join('');
+      return `<div class="acc-club-panel" data-club="${escHtml(clubName)}" style="display:${clubName === firstClub ? '' : 'none'};">
+        <div class="item-list" style="margin-bottom:0;">${rows}</div>
+      </div>`;
+    }).join('');
+
+  } catch (err) {
+    adminList.innerHTML = clubList.innerHTML = `<div class="empty-state">Error: ${escHtml(err.message)}</div>`;
+  }
+}
+
+function showClubTab(clubName, btn) {
+  document.querySelectorAll('.acc-club-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.acc-club-tab').forEach(b => {
+    b.style.background = 'var(--off-white)';
+    b.style.color = 'var(--navy)';
+  });
+  const panel = document.querySelector(`.acc-club-panel[data-club="${CSS.escape(clubName)}"]`);
+  if (panel) panel.style.display = '';
+  if (btn) { btn.style.background = 'var(--navy)'; btn.style.color = '#fff'; }
 }
 
 function toggleClubField() {
@@ -1185,28 +1559,60 @@ function toggleClubField() {
   document.getElementById('acc-club-row').style.display = role === 'club' ? '' : 'none';
 }
 
-function addAccount() {
-  const name     = document.getElementById('acc-name').value.trim();
-  const email    = document.getElementById('acc-email').value.trim().toLowerCase();
-  const password = document.getElementById('acc-password').value;
-  const role     = document.getElementById('acc-role').value;
-  const club     = role === 'club' ? document.getElementById('acc-club').value : '';
+async function addAccount() {
+  const name      = document.getElementById('acc-name').value.trim();
+  const email     = document.getElementById('acc-email').value.trim().toLowerCase();
+  const password  = document.getElementById('acc-password').value;
+  const role      = document.getElementById('acc-role').value;
+  const club      = role === 'club' ? document.getElementById('acc-club').value : '';
+  const photoFile = document.getElementById('acc-photo-file')?.files[0];
+
   if (!name || !email || !password) { showToast('Please fill in all fields', 'error'); return; }
-  if (role === 'club' && !club) { showToast('Please select a club', 'error'); return; }
-  const accounts = getAccounts();
-  if (accounts.find(a => a.email === email)) { showToast('An account with that email already exists', 'error'); return; }
-  accounts.push({ id: 'a' + Date.now(), name, email, password, role, club });
-  saveAccountsData(accounts);
-  renderAccounts();
-  ['acc-name','acc-email','acc-password'].forEach(id => document.getElementById(id).value = '');
-  showToast('Account created');
+  if (role === 'club' && !club)       { showToast('Please select a club', 'error'); return; }
+
+  showToast('Creating account…');
+  try {
+    const cred = await fbAuth.createUserWithEmailAndPassword(email, password);
+    const uid  = cred.user.uid;
+
+    let logoUrl = '';
+    if (photoFile) {
+      const storageRef = fbStorage.ref(`clubs/${uid}/logo`);
+      await storageRef.put(photoFile);
+      logoUrl = await storageRef.getDownloadURL();
+    }
+
+    await db.collection('users').doc(uid).set({
+      name, email, role, club, logoUrl,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    ['acc-name','acc-email','acc-password'].forEach(id => document.getElementById(id).value = '');
+    const pf = document.getElementById('acc-photo-file');
+    if (pf) { pf.value = ''; document.getElementById('acc-photo-name').textContent = ''; }
+
+    renderAccounts();
+    showToast('Account created');
+  } catch (err) {
+    showToast('Error: ' + (err.message || 'Could not create account'), 'error');
+  }
 }
 
-function removeAccount(id) {
-  if (id === 'a0') return;
-  saveAccountsData(getAccounts().filter(a => a.id !== id));
-  renderAccounts();
-  showToast('Account removed');
+async function removeAccount(uid) {
+  if (!confirm('Remove this account? They will no longer have access.')) return;
+  try {
+    await Promise.all([
+      db.collection('users').doc(uid).delete(),
+      db.collection('settings').doc('blocklist').set(
+        { uids: firebase.firestore.FieldValue.arrayUnion(uid) },
+        { merge: true }
+      )
+    ]);
+    renderAccounts();
+    showToast('Account removed');
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
 }
 
 /* ════════════════════════════════
@@ -1257,7 +1663,10 @@ function getClubColor(club) {
 function getCrews() {
   try { return JSON.parse(localStorage.getItem('ecrc_admin_crews') || '[]'); } catch { return []; }
 }
-function saveCrewsData(c) { localStorage.setItem('ecrc_admin_crews', JSON.stringify(c)); }
+function saveCrewsData(c) {
+  localStorage.setItem('ecrc_admin_crews', JSON.stringify(c));
+  db.collection('settings').doc('crews').set({ data: c }).catch(e => console.warn('Crew save:', e));
+}
 
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1271,19 +1680,15 @@ function initCrewsTab() {
   crewCurrentYear = String(new Date().getFullYear());
   document.getElementById('crew-year').value = crewCurrentYear;
 
-  if (userRole === 'club') {
-    const row = document.getElementById('crew-ov-filter-row');
-    if (row) row.style.display = 'none';
-  } else {
-    const sel = document.getElementById('ov-filter-club');
-    if (sel) sel.innerHTML = '<option value="">All Clubs</option>' + ALL_CLUBS.map(c => `<option>${escHtml(c)}</option>`).join('');
-  }
+  const sel = document.getElementById('ov-filter-club');
+  if (sel) sel.innerHTML = '<option value="">All Clubs</option>' + ALL_CLUBS.map(c => `<option>${escHtml(c)}</option>`).join('');
 
   buildCrewRegattaSelect();
 }
 
 function clearAllCrewsForRegatta() {
   if (userRole !== 'admin') return;
+  if (isDrawLocked()) { showToast('Crews are locked — unlock first before deleting', 'error'); return; }
   if (!crewCurrentRegattaId) { showToast('No regatta selected', 'error'); return; }
   if (!confirm(`Delete ALL crew entries for this regatta (${crewCurrentRegattaName || crewCurrentRegattaId})? This cannot be undone.`)) return;
   const remaining = getCrews().filter(c =>
@@ -1384,9 +1789,7 @@ function renderOverview() {
   );
 
   const filterClub = (document.getElementById('ov-filter-club') || {}).value || '';
-  const viewCrews = userRole === 'club'
-    ? allForRegatta.filter(c => c.club === userClub)
-    : (filterClub ? allForRegatta.filter(c => c.club === filterClub) : allForRegatta);
+  const viewCrews = filterClub ? allForRegatta.filter(c => c.club === filterClub) : allForRegatta;
 
   if (!viewCrews.length) {
     el.innerHTML = '<div class="empty-state">No crews have been submitted for this regatta yet.</div>';
@@ -1437,7 +1840,7 @@ function renderOverview() {
   });
 
   const locked  = isDrawLocked();
-  const canEdit = !locked || userRole === 'admin';
+  const canEdit = !locked && userRole !== 'club';
 
   // Cell content
   function cellHtml(entry) {
@@ -1535,7 +1938,7 @@ function renderOverview() {
 }
 
 function removeCrewEntry(id) {
-  if (isDrawLocked() && userRole !== 'admin') { showToast('Crew submissions are locked', 'error'); return; }
+  if (isDrawLocked()) { showToast('Crew submissions are locked', 'error'); return; }
   saveCrewsData(getCrews().filter(c => c.id !== id));
   renderOverview();
   renderSubmitTable();
@@ -1583,7 +1986,10 @@ function downloadCrewsCSV() {
 function getLaneData() {
   try { return JSON.parse(localStorage.getItem('ecrc_admin_lanes') || '{}'); } catch { return {}; }
 }
-function saveLaneData(d) { localStorage.setItem('ecrc_admin_lanes', JSON.stringify(d)); }
+function saveLaneData(d) {
+  localStorage.setItem('ecrc_admin_lanes', JSON.stringify(d));
+  syncLaneDataToFirestore();
+}
 
 function laneStartKey() { return `ecrc_lane_starts_${crewCurrentYear}_${crewCurrentRegattaId}`; }
 function getLaneStarts() { try { return JSON.parse(localStorage.getItem(laneStartKey()) || '{}'); } catch { return {}; } }
@@ -1591,6 +1997,23 @@ function saveLaneStart(category, val) {
   const d = getLaneStarts();
   d[category] = Math.max(1, parseInt(val) || 1);
   localStorage.setItem(laneStartKey(), JSON.stringify(d));
+  syncLaneDataToFirestore();
+}
+
+function syncLaneDataToFirestore() {
+  const laneStarts = {};
+  const crewLocks  = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key) continue;
+    if (key.startsWith('ecrc_lane_starts_'))
+      try { laneStarts[key.replace('ecrc_lane_starts_', '')] = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
+    if (key.startsWith('ecrc_crew_lock_'))
+      crewLocks[key.replace('ecrc_crew_lock_', '')] = localStorage.getItem(key) === '1';
+  }
+  db.collection('settings').doc('laneData').set({
+    lanes: getLaneData(), laneStarts, crewLocks
+  }).catch(e => console.warn('LaneData save:', e));
 }
 
 /* ─── Explicit crew lock (independent of lane draws) ─── */
@@ -1605,6 +2028,7 @@ function toggleCrewLock() {
     localStorage.setItem(crewLockKey(), '1');
     showToast('Crew submissions locked');
   }
+  syncLaneDataToFirestore();
   renderOverview();
   renderDrawSheet();
   renderSubmitTable();
@@ -1705,27 +2129,30 @@ function renderDrawSheet() {
     }
   });
 
-  // Header row 1 — lane start inputs
+  const canEditDraw = userRole === 'admin';
+
+  // Header row 1 — lane start inputs (admin) or static value (club)
   const laneInputRow = usedCats.map(cat => {
     const startVal = laneStarts[cat] || 1;
     const sid = 'ls_' + cat.replace(/[^a-zA-Z0-9]/g, '_');
     return `<td class="draw-lane-start-row">
       <span class="draw-lane-input-label">Lane start</span>
-      <input type="number" id="${sid}" value="${startVal}" min="1" max="99"
-        class="draw-lane-input" onchange="saveLaneStart('${escHtml(cat)}', this.value)" />
+      ${canEditDraw
+        ? `<input type="number" id="${sid}" value="${startVal}" min="1" max="99" class="draw-lane-input" onchange="saveLaneStart('${escHtml(cat)}', this.value)" />`
+        : `<span class="draw-lane-input" style="display:inline-block;text-align:center;cursor:default;">${startVal}</span>`}
     </td>`;
   }).join('');
 
-  // Header row 2 — category name + count + draw button
+  // Header row 2 — category name + count + draw button (admin only)
   const catHeaderRow = usedCats.map(cat => {
     const count = all.filter(c => c.category === cat).length;
     const allDone = all.filter(c => c.category === cat).every(c => laneData[c.id]);
     return `<th class="draw-cat-header-cell">
       <div style="font-size:1rem;font-weight:900;font-family:'Merriweather',serif;line-height:1;margin-bottom:3px;">${count}</div>
-      <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.05em;margin-bottom:6px;white-space:normal;">${escHtml(cat)}</div>
-      <button class="crew-add-btn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.28);color:#fff;font-size:0.65rem;" onclick="drawLanes('${escHtml(cat)}')">
+      <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.05em;${canEditDraw ? 'margin-bottom:6px;' : ''}white-space:normal;">${escHtml(cat)}</div>
+      ${canEditDraw ? `<button class="crew-add-btn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.28);color:#fff;font-size:0.65rem;" onclick="drawLanes('${escHtml(cat)}')">
         &#127922; ${allDone ? 'Redraw' : 'Draw'}
-      </button>
+      </button>` : ''}
     </th>`;
   }).join('');
 
@@ -1850,9 +2277,9 @@ function renderSubmitTable() {
     c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId
   );
 
-  // Active categories (with entries) + any extra columns added this session
-  const activeCats = CATEGORIES.filter(cat => allForRegatta.some(c => c.category === cat));
-  const usedCats   = [...new Set([...activeCats, ...submitExtraCats])];
+  // Always show all categories so the table is consistent across regattas.
+  // availCats will be empty so the "Add Category" column disappears automatically.
+  const usedCats = CATEGORIES;
 
   // Clubs scope
   const clubs = userRole === 'club' ? [userClub] : ALL_CLUBS;
@@ -1860,7 +2287,7 @@ function renderSubmitTable() {
   // Lock check — respects both explicit lock and auto-lock from lane draws
   const locked      = isDrawLocked();
   const explicitLk  = isCrewExplicitlyLocked();
-  const canEdit     = !locked || userRole === 'admin';
+  const canEdit     = !locked;
 
   let lockBannerHtml = '';
   if (locked) {
@@ -1998,7 +2425,7 @@ function renderSubmitTable() {
 
 function saveAllCrews() {
   if (!crewCurrentRegattaId) { showToast('Please select a regatta first', 'error'); return; }
-  if (isDrawLocked() && userRole !== 'admin') { showToast('Crew submissions are locked', 'error'); return; }
+  if (isDrawLocked()) { showToast('Crew submissions are locked', 'error'); return; }
 
   const newEntries = [];
   document.querySelectorAll('#submit-panel-content td.submit-cell').forEach(cell => {
@@ -2014,7 +2441,7 @@ function saveAllCrews() {
       id: entryId || ('crew' + Date.now() + '_' + Math.random().toString(36).slice(2, 5)),
       year: crewCurrentYear, regattaId: crewCurrentRegattaId,
       regattaName: crewCurrentRegattaName,
-      club, category: cat, rowers, cox, submittedBy: auth.email
+      club, category: cat, rowers, cox, submittedBy: currentUser?.email || ''
     });
   });
 
@@ -2036,27 +2463,481 @@ function saveAllCrews() {
   showToast(`Saved — ${newEntries.length} crew entr${newEntries.length !== 1 ? 'ies' : 'y'}`);
 }
 
-/* ── Init ── */
-// Default tab based on role
-if (userRole === 'club' || userRole === 'personal') {
-  const crewBtn = document.querySelector('.nav-btn[data-roles="admin,club"]');
-  showTab('crews', crewBtn);
-} else {
-  const resultsBtn = document.querySelector('.nav-btn[data-roles="admin"]');
-  showTab('results', resultsBtn);
-  buildRegattaSelect();
-  loadResultsTable();
-  renderEvents();
-  renderNews();
-  renderRulebooks();
-  renderAccounts();
+/* ════════════════════════════════
+   CLUBS
+════════════════════════════════ */
+let editingClubUid   = null;
+let editingClubEmail = '';
+
+async function renderClubs() {
+  const list = document.getElementById('clubs-list');
+  if (!list) return;
+  list.innerHTML = '<div class="empty-state">Loading clubs…</div>';
+  try {
+    const snap = await db.collection('users').where('role', '==', 'club').get();
+    if (snap.empty) {
+      list.innerHTML = '<div class="empty-state">No club accounts yet. Create them in the Accounts tab.</div>';
+      return;
+    }
+    const rows = snap.docs.map(doc => {
+      const c   = doc.data();
+      const uid = doc.id;
+      const logoSrc = c.logoUrl || CLUB_LOGOS[c.club] || '';
+      const avatar  = logoSrc
+        ? `<img src="${escHtml(logoSrc)}" class="item-logo" />`
+        : `<div class="account-avatar">${(c.name || '?').charAt(0).toUpperCase()}</div>`;
+      return `<div class="item-row">
+        ${avatar}
+        <div class="item-info">
+          <strong>${escHtml(c.name || '—')}</strong>
+          <span>${escHtml(c.email || '—')}${c.club ? ' &middot; ' + escHtml(c.club) : ''}</span>
+        </div>
+        <button class="btn-secondary btn-sm" onclick="editClub('${uid}')">&#9998; Edit</button>
+        <button class="btn-danger btn-sm" onclick="removeClubAccount('${uid}')">&#10005; Remove</button>
+      </div>`;
+    }).join('');
+    list.innerHTML = `<div class="item-list">${rows}</div>`;
+  } catch (err) {
+    list.innerHTML = `<div class="empty-state">Error: ${escHtml(err.message)}</div>`;
+  }
 }
 
-initCrewsTab();
+async function editClub(uid) {
+  try {
+    const snap = await db.collection('users').doc(uid).get();
+    if (!snap.exists) { showToast('Club not found', 'error'); return; }
+    const c = snap.data();
+    editingClubUid   = uid;
+    editingClubEmail = c.email || '';
 
-// Set today's date as default for news date
-const today = new Date().toISOString().split('T')[0];
-if (document.getElementById('news-date')) document.getElementById('news-date').value = today;
+    document.getElementById('cedit-name').value     = c.name  || '';
+    document.getElementById('cedit-club').value     = c.club  || '';
+    document.getElementById('cedit-email').value    = c.email || '';
+    document.getElementById('cedit-password').value = '';
+    document.getElementById('cedit-current-password').value = '';
+    document.getElementById('cedit-current-pass-row').style.display = 'none';
+    document.getElementById('cedit-cred-note').style.display = 'none';
+    window._ceditOrigEmail = (c.email || '').toLowerCase();
+    document.getElementById('club-edit-title').textContent = `Edit — ${c.name || 'Club'}`;
+    document.getElementById('cedit-photo-file').value = '';
+    document.getElementById('cedit-photo-name').textContent = '';
+
+    const photo = document.getElementById('cedit-current-photo');
+    const placeholder = document.getElementById('cedit-photo-placeholder');
+    const logoSrc = c.logoUrl || CLUB_LOGOS[c.club] || '';
+    if (logoSrc) {
+      photo.src = logoSrc; photo.style.display = '';
+      if (placeholder) placeholder.style.display = 'none';
+    } else {
+      photo.style.display = 'none';
+      if (placeholder) { placeholder.style.display = 'flex'; placeholder.textContent = (c.name || '?').charAt(0).toUpperCase(); }
+    }
+
+    document.getElementById('club-edit-card').style.display = '';
+    document.getElementById('club-edit-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    showToast('Error loading club: ' + err.message, 'error');
+  }
+}
+
+function cancelClubEdit() {
+  editingClubUid = null;
+  editingClubEmail = '';
+  window._ceditOrigEmail = '';
+  document.getElementById('club-edit-card').style.display = 'none';
+  document.getElementById('cedit-password').value = '';
+  document.getElementById('cedit-current-password').value = '';
+  document.getElementById('cedit-current-pass-row').style.display = 'none';
+  document.getElementById('cedit-cred-note').style.display = 'none';
+}
+
+async function saveClubEdit() {
+  if (!editingClubUid) return;
+  const name        = document.getElementById('cedit-name').value.trim();
+  const club        = document.getElementById('cedit-club').value;
+  const photoFile   = document.getElementById('cedit-photo-file').files[0];
+  const newEmail    = document.getElementById('cedit-email').value.trim().toLowerCase();
+  const newPass     = document.getElementById('cedit-password').value;
+  const currentPass = document.getElementById('cedit-current-password').value;
+  const credNote    = document.getElementById('cedit-cred-note');
+  if (!name) { showToast('Name is required', 'error'); return; }
+
+  const emailChanged = newEmail && newEmail !== editingClubEmail.toLowerCase();
+  const hasNewPass   = newPass.length > 0;
+
+  // Password-only change is not possible from the browser without re-auth
+  if (hasNewPass && !emailChanged) {
+    credNote.innerHTML = '&#9888; To change only the password, use <strong>Send Password Reset</strong> below — a reset email will be sent to the account.';
+    credNote.style.display = '';
+    return;
+  }
+
+  // Email change requires current password to re-authenticate
+  if (emailChanged && !currentPass) {
+    credNote.innerHTML = '&#9888; Enter the account\'s <strong>current password</strong> in the field above to update the login email.';
+    credNote.style.display = '';
+    document.getElementById('cedit-current-pass-row').style.display = '';
+    document.getElementById('cedit-current-password').focus();
+    return;
+  }
+
+  credNote.style.display = 'none';
+  showToast('Saving…');
+  try {
+    const updates = { name, club };
+    if (photoFile) {
+      const ref = fbStorage.ref(`clubs/${editingClubUid}/logo`);
+      await ref.put(photoFile);
+      updates.logoUrl = await ref.getDownloadURL();
+    }
+
+    if (emailChanged) {
+      // Sign in as the account via secondary app, update email directly in Firebase Auth
+      const tempApp  = firebase.initializeApp(firebaseConfig, `cred_${Date.now()}`);
+      const tempAuth = tempApp.auth();
+      try {
+        const cred = await tempAuth.signInWithEmailAndPassword(editingClubEmail, currentPass);
+        await cred.user.updateEmail(newEmail);
+        if (hasNewPass) await cred.user.updatePassword(newPass);
+        await db.collection('users').doc(editingClubUid).update({ ...updates, email: newEmail });
+        await tempAuth.signOut();
+      } finally {
+        await tempApp.delete().catch(() => {});
+      }
+      cancelClubEdit();
+      renderAccounts();
+      showToast('Login email updated — account can now sign in with new address');
+    } else {
+      await db.collection('users').doc(editingClubUid).update(updates);
+      cancelClubEdit();
+      renderAccounts();
+      showToast('Club updated');
+    }
+  } catch (err) {
+    let msg = err.message || 'Unknown error';
+    if (err.code === 'auth/wrong-password') msg = 'Current password is incorrect';
+    if (err.code === 'auth/user-not-found')  msg = 'Account not found in Firebase Auth';
+    showToast('Error: ' + msg, 'error');
+  }
+}
+
+async function sendClubPasswordReset() {
+  if (!editingClubEmail) return;
+  try {
+    await fbAuth.sendPasswordResetEmail(editingClubEmail);
+    showToast(`Password reset email sent to ${editingClubEmail}`);
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+async function removeClubAccount(uid) {
+  if (!confirm('Remove this club account? They will no longer have access.')) return;
+  try {
+    await Promise.all([
+      db.collection('users').doc(uid).delete(),
+      db.collection('settings').doc('blocklist').set(
+        { uids: firebase.firestore.FieldValue.arrayUnion(uid) },
+        { merge: true }
+      )
+    ]);
+    renderAccounts();
+    showToast('Club removed');
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+/* ════════════════════════════════
+   ROSTER  (Club member accounts)
+════════════════════════════════ */
+
+function initRosterTab() {
+  const filterRow   = document.getElementById('roster-club-filter-row');
+  const adminField  = document.getElementById('roster-admin-club-field');
+  const adminSel    = document.getElementById('roster-admin-club');
+  const filterSel   = document.getElementById('roster-club-filter');
+  const catSel      = document.getElementById('roster-categories');
+
+  // Populate categories multi-select
+  if (catSel && catSel.options.length === 0) {
+    catSel.innerHTML = CATEGORIES.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+  }
+
+  if (userRole === 'admin') {
+    if (filterRow)  filterRow.style.display  = 'flex';
+    if (adminField) adminField.style.display = '';
+    if (filterSel && filterSel.options.length <= 1) {
+      filterSel.innerHTML = '<option value="">All Clubs</option>' + ALL_CLUBS.map(c => `<option>${escHtml(c)}</option>`).join('');
+    }
+    if (adminSel && adminSel.options.length <= 1) {
+      adminSel.innerHTML = '<option value="">Select club…</option>' + ALL_CLUBS.map(c => `<option>${escHtml(c)}</option>`).join('');
+    }
+    const sub = document.getElementById('roster-card-sub');
+    if (sub) sub.textContent = 'Manage individual rower accounts across all clubs. Each rower gets their own login to view race records.';
+  } else {
+    if (filterRow)  filterRow.style.display  = 'none';
+    if (adminField) adminField.style.display = 'none';
+  }
+  renderRoster();
+}
+
+async function renderRoster() {
+  const list = document.getElementById('roster-list');
+  if (!list) return;
+  list.innerHTML = '<div class="empty-state">Loading…</div>';
+  try {
+    let query = db.collection('users').where('role', '==', 'personal');
+    const filterClub = userRole === 'admin'
+      ? (document.getElementById('roster-club-filter')?.value || '')
+      : userClub;
+    if (filterClub) query = query.where('club', '==', filterClub);
+
+    const snap = await query.get();
+    if (snap.empty) {
+      list.innerHTML = `<div class="empty-state">No rowers yet${filterClub ? ' for ' + escHtml(filterClub) : ''}. Add them below.</div>`;
+      return;
+    }
+
+    const rows = snap.docs.map(doc => {
+      const r   = doc.data();
+      const uid = doc.id;
+      const initials = (r.name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+      const avatar = r.photoUrl
+        ? `<img src="${escHtml(r.photoUrl)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;" />`
+        : `<div class="account-avatar" style="font-size:0.72rem;width:40px;height:40px;">${initials}</div>`;
+
+      const dobStr = r.dob ? formatDob(r.dob) : '';
+      const cats   = (r.categories || []).slice(0, 3).map(c => `<span style="font-size:0.65rem;background:rgba(13,34,68,0.07);color:var(--navy);border-radius:10px;padding:2px 8px;white-space:nowrap;">${escHtml(c)}</span>`).join('');
+      const moreCats = (r.categories || []).length > 3 ? `<span style="font-size:0.65rem;color:var(--muted);">+${(r.categories.length - 3)} more</span>` : '';
+      const subLine = [r.email, r.club, dobStr].filter(Boolean).join(' · ');
+
+      return `<div class="account-row" style="flex-wrap:wrap;gap:10px;">
+        ${avatar}
+        <div class="account-info" style="min-width:160px;">
+          <strong>${escHtml(r.name || '—')}</strong>
+          <span>${escHtml(subLine)}</span>
+          ${cats || moreCats ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${cats}${moreCats}</div>` : ''}
+        </div>
+        <span class="role-badge personal" style="align-self:flex-start;margin-top:2px;">Rower</span>
+        <button class="btn-danger btn-sm" onclick="removeRosterMember('${uid}')">&#10005; Remove</button>
+      </div>`;
+    }).join('');
+    list.innerHTML = `<div class="item-list">${rows}</div>`;
+  } catch (err) {
+    list.innerHTML = `<div class="empty-state">Error: ${escHtml(err.message)}</div>`;
+  }
+}
+
+function formatDob(dob) {
+  if (!dob) return '';
+  try {
+    const d = new Date(dob + 'T00:00:00');
+    return d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch { return dob; }
+}
+
+async function addRosterMember() {
+  const name      = document.getElementById('roster-name').value.trim();
+  const email     = document.getElementById('roster-email').value.trim().toLowerCase();
+  const password  = document.getElementById('roster-password').value;
+  const dob       = document.getElementById('roster-dob').value;
+  const photoFile = document.getElementById('roster-photo-file')?.files[0];
+  const catSel    = document.getElementById('roster-categories');
+  const categories = catSel
+    ? Array.from(catSel.selectedOptions).map(o => o.value)
+    : [];
+  const club = userRole === 'admin'
+    ? document.getElementById('roster-admin-club').value
+    : userClub;
+
+  if (!name || !email || !password) { showToast('Please fill in all fields', 'error'); return; }
+  if (!club) { showToast('Please select a club', 'error'); return; }
+  if (password.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+
+  showToast('Creating account…');
+  const tempApp  = firebase.initializeApp(firebaseConfig, `roster_${Date.now()}`);
+  const tempAuth = tempApp.auth();
+  try {
+    const cred = await tempAuth.createUserWithEmailAndPassword(email, password);
+    const uid  = cred.user.uid;
+
+    let photoUrl = '';
+    if (photoFile) {
+      const ref = fbStorage.ref(`rowers/${uid}/photo`);
+      await ref.put(photoFile);
+      photoUrl = await ref.getDownloadURL();
+    }
+
+    await db.collection('users').doc(uid).set({
+      name, email, role: 'personal', club, dob, categories, photoUrl,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: currentUser?.uid || ''
+    });
+    await tempAuth.signOut();
+
+    ['roster-name', 'roster-email', 'roster-password', 'roster-dob'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    const pf = document.getElementById('roster-photo-file');
+    if (pf) { pf.value = ''; document.getElementById('roster-photo-name').textContent = ''; }
+    if (catSel) Array.from(catSel.options).forEach(o => o.selected = false);
+
+    renderRoster();
+    showToast(`Account created for ${name}`);
+  } catch (err) {
+    showToast('Error: ' + (err.message || 'Could not create account'), 'error');
+  } finally {
+    await tempApp.delete().catch(() => {});
+  }
+}
+
+async function removeRosterMember(uid) {
+  if (!confirm('Remove this rower? They will no longer be able to log in.')) return;
+  try {
+    await Promise.all([
+      db.collection('users').doc(uid).delete(),
+      db.collection('settings').doc('blocklist').set(
+        { uids: firebase.firestore.FieldValue.arrayUnion(uid) },
+        { merge: true }
+      )
+    ]);
+    renderRoster();
+    showToast('Rower removed');
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+/* ════════════════════════════════
+   PROFILE  (Personal rower view)
+════════════════════════════════ */
+
+async function renderProfile() {
+  const content   = document.getElementById('profile-results-content');
+  const titleEl   = document.getElementById('profile-name-title');
+  const subEl     = document.getElementById('profile-club-sub');
+  const avatarEl  = document.getElementById('profile-avatar');
+  const photoEl   = document.getElementById('profile-photo');
+  const metaEl    = document.getElementById('profile-meta');
+  const catsWrap  = document.getElementById('profile-categories-wrap');
+  const catsEl    = document.getElementById('profile-categories');
+  if (!content) return;
+
+  // Load full profile from Firestore for up-to-date photo / DOB / categories
+  let profileData = {};
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid).get();
+    if (snap.exists) profileData = snap.data();
+  } catch {}
+
+  const displayName = profileData.name || document.getElementById('user-name')?.textContent || 'Rower';
+  const initials    = displayName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+
+  if (titleEl) titleEl.textContent = `Welcome, ${displayName}`;
+  if (subEl)   subEl.textContent   = userClub ? `Member of ${userClub}` : '';
+
+  // Avatar / photo
+  if (profileData.photoUrl && photoEl && avatarEl) {
+    photoEl.src = profileData.photoUrl;
+    photoEl.style.display = '';
+    avatarEl.style.display = 'none';
+  } else if (avatarEl) {
+    avatarEl.textContent = initials || '?';
+    avatarEl.style.display = 'flex';
+    if (photoEl) photoEl.style.display = 'none';
+  }
+
+  // DOB
+  if (metaEl) {
+    const dobStr = profileData.dob ? `Born ${formatDob(profileData.dob)}` : '';
+    metaEl.innerHTML = dobStr
+      ? `<span style="font-size:0.75rem;color:var(--muted);">${escHtml(dobStr)}</span>`
+      : '';
+  }
+
+  // Categories
+  const cats = profileData.categories || [];
+  if (catsWrap && catsEl) {
+    if (cats.length) {
+      catsWrap.style.display = '';
+      catsEl.innerHTML = cats.map(c =>
+        `<span style="font-size:0.75rem;background:rgba(13,34,68,0.08);color:var(--navy);border-radius:12px;padding:4px 12px;font-weight:500;">${escHtml(c)}</span>`
+      ).join('');
+    } else {
+      catsWrap.style.display = 'none';
+    }
+  }
+
+  content.innerHTML = '<div class="empty-state">Loading results…</div>';
+
+  if (!userClub) {
+    content.innerHTML = '<div class="empty-state">No club assigned to your account. Contact your club admin.</div>';
+    return;
+  }
+
+  try {
+    const [resultsSnap, eventsSnap] = await Promise.all([
+      db.collection('settings').doc('results').get(),
+      db.collection('settings').doc('events').get()
+    ]);
+
+    const allResults = resultsSnap.exists ? (resultsSnap.data().data || {}) : {};
+    const events     = eventsSnap.exists  ? (eventsSnap.data().data  || []) : [];
+    const races      = events.filter(e => e.type === 'ecrc_race');
+
+    const medals = [];
+    Object.entries(allResults).forEach(([year, yearData]) => {
+      Object.entries(yearData).forEach(([regattaId, regattaData]) => {
+        const regatta = races.find(r => r.id === regattaId);
+        const regattaName = regatta ? regatta.club.replace(/ Rowing Club$/, '').replace(/ RC$/, '') + ' Regatta' : regattaId;
+        const regattaDate = regatta ? new Date(regatta.date).toLocaleDateString('en-IE', { day:'numeric', month:'short', year:'numeric' }) : '';
+        Object.entries(regattaData).forEach(([cat, positions]) => {
+          const pos = positions.indexOf(userClub);
+          if (pos >= 0) medals.push({ year, regattaName, regattaDate, cat, position: pos + 1 });
+        });
+      });
+    });
+
+    if (!medals.length) {
+      content.innerHTML = `
+        <div class="empty-state">
+          <div style="font-size:2rem;margin-bottom:10px;">🏁</div>
+          <p>No results recorded for <strong>${escHtml(userClub)}</strong> yet.</p>
+          <p style="margin-top:6px;font-size:0.78rem;">Results will appear here as regattas are completed.</p>
+        </div>`;
+      return;
+    }
+
+    const MEDAL_EMOJI  = ['', '🥇', '🥈', '🥉'];
+    const MEDAL_LABEL  = ['', 'Gold', 'Silver', 'Bronze'];
+    const MEDAL_COLOR  = ['', 'var(--gold)', '#64748b', '#92400e'];
+
+    const byYear = {};
+    medals.forEach(m => { if (!byYear[m.year]) byYear[m.year] = []; byYear[m.year].push(m); });
+
+    content.innerHTML = Object.entries(byYear).sort(([a],[b]) => b - a).map(([year, entries]) => `
+      <div style="margin-bottom:28px;">
+        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:10px;">${year} Season</div>
+        <div class="item-list" style="margin-bottom:0;">
+          ${entries.sort((a, b) => a.position - b.position).map(m => `
+            <div class="medal-result-row">
+              <div class="medal-icon">${MEDAL_EMOJI[m.position]}</div>
+              <div class="medal-info">
+                <strong>${escHtml(m.cat)}</strong>
+                <span>${escHtml(m.regattaName)}${m.regattaDate ? ' &middot; ' + escHtml(m.regattaDate) : ''}</span>
+              </div>
+              <span class="medal-pos" style="color:${MEDAL_COLOR[m.position]};">${MEDAL_LABEL[m.position]}</span>
+            </div>`).join('')}
+        </div>
+      </div>`).join('');
+  } catch (err) {
+    content.innerHTML = `<div class="empty-state">Error loading results: ${escHtml(err.message)}</div>`;
+  }
+}
+
+/* ── Init runs inside onAuthStateChanged above ── */
 </script>
 
 </body>

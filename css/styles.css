@@ -791,6 +791,15 @@ a { text-decoration: none; color: inherit; }
 }
 .res-year-btn:hover { background: rgba(255,255,255,0.1); color: var(--white); }
 .res-year-btn.active { background: var(--gold); border-color: var(--gold); color: var(--navy); }
+
+/* Calendar year tabs sit on white background — override the dark-bg defaults */
+#cal-year-tabs .res-year-btn {
+  background: rgba(13,34,68,0.06);
+  border-color: rgba(13,34,68,0.2);
+  color: var(--navy);
+}
+#cal-year-tabs .res-year-btn:hover { background: rgba(13,34,68,0.12); color: var(--navy); }
+#cal-year-tabs .res-year-btn.active { background: var(--gold); border-color: var(--gold); color: var(--navy); }
 .year-panel { display: none; }
 .year-panel.active { display: block; }
 .regatta-tabs-wrap { overflow-x: auto; margin-bottom: 20px; padding-bottom: 6px; }

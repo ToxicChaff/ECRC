@@ -8,20 +8,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
 </head>
 <body>
 
-  <!-- Top bar -->
-  <div class="top-bar">
-    <div class="container">
-      <span>&#9990; eastcoastrowingireland@gmail.com</span>
-      <span class="top-bar-right">
-        <a href="#">Member Portal</a> &nbsp;|&nbsp;
-        <a href="#">Volunteer</a> &nbsp;|&nbsp;
-        <a href="#">Newsletter</a>
-      </span>
-    </div>
-  </div>
 
   <!-- Navigation -->
   <nav class="navbar" id="navbar">
@@ -101,13 +93,10 @@
             <img src="Brand_assets/ECRC-Logo.jpg" alt="ECRC Logo" />
             <span class="footer-logo-text">East Coast Rowing Council</span>
           </div>
-          <p>The governing body for coastal rowing on the East Coast of Ireland, covering counties Dublin, Wicklow, and North Wexford. Affiliated to the Irish Coastal Rowing Federation.</p>
+          <p>The East Coast Rowing Council is the organising body for traditional skiff rowing on the East Coast.</p>
           <div class="social-links">
             <a href="https://www.facebook.com/EastCoastRowingCouncil" class="social-link" title="Facebook" target="_blank" rel="noopener">f</a>
-            <a href="#" class="social-link" title="X / Twitter">&#120143;</a>
             <a href="https://www.instagram.com/east.coastrowing/" class="social-link" title="Instagram" target="_blank" rel="noopener">&#9749;</a>
-            <a href="#" class="social-link" title="YouTube">&#9654;</a>
-            <a href="#" class="social-link" title="LinkedIn">in</a>
           </div>
         </div>
         <div class="footer-col">
@@ -123,24 +112,12 @@
           </ul>
         </div>
         <div class="footer-col">
-          <h4>Resources</h4>
-          <ul>
-            <li><a href="#">Member Portal</a></li>
-            <li><a href="#">Event Registration</a></li>
-            <li><a href="#">Results Archive</a></li>
-            <li><a href="#">Coaching Licences</a></li>
-            <li><a href="#">Volunteer</a></li>
-            <li><a href="#">Newsletter</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
           <h4>Contact</h4>
           <ul>
             <li><a href="mailto:eastcoastrowingireland@gmail.com">eastcoastrowingireland@gmail.com</a></li>
             <li><a href="privacy-policy.html">Privacy Policy</a></li>
             <li><a href="terms.html">Terms of Use</a></li>
             <li><a href="safeguarding.html">Safeguarding Policy</a></li>
-            <li><a href="#">Media Enquiries</a></li>
           </ul>
         </div>
       </div>
@@ -169,31 +146,44 @@
       });
     });
 
-    // Auth — swap for Firebase later
-    const FALLBACK_ACCOUNTS = [
-      { email: 'eastcoastrowingireland@gmail.com', password: '123', role: 'admin', name: 'ECRC Admin' },
-    ];
-    function getAllAccounts() {
-      try { return JSON.parse(localStorage.getItem('ecrc_admin_accounts') || 'null') || FALLBACK_ACCOUNTS; } catch { return FALLBACK_ACCOUNTS; }
-    }
+    /* ── Firebase init ── */
+    const firebaseConfig = {
+      apiKey: "AIzaSyA8xqQ7QmL1yL4kCKwB8No5Qzhm7bj7NKw",
+      authDomain: "ercr-4e61e.firebaseapp.com",
+      projectId: "ercr-4e61e",
+      storageBucket: "ercr-4e61e.firebasestorage.app",
+      messagingSenderId: "1051164701216",
+      appId: "1:1051164701216:web:b838c4e67a5f1c38a64245"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const fbAuth = firebase.auth();
 
-    if (localStorage.getItem('ecrc_auth')) {
-      window.location.href = 'admin.html';
-    }
+    /* If already signed in, go straight to admin */
+    fbAuth.onAuthStateChanged((user) => {
+      if (user) window.location.href = 'admin.html';
+    });
 
-    document.getElementById('login-form').addEventListener('submit', function(e) {
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const email    = document.getElementById('email').value.trim().toLowerCase();
       const password = document.getElementById('password').value;
-      const match    = getAllAccounts().find(a => a.email === email && a.password === password);
+      const btn      = document.getElementById('login-btn');
       const errEl    = document.getElementById('login-error');
+      errEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
 
-      if (match) {
-        localStorage.setItem('ecrc_auth', JSON.stringify({ email: match.email, role: match.role, name: match.name, club: match.club || '' }));
+      try {
+        await fbAuth.signInWithEmailAndPassword(email, password);
         window.location.href = 'admin.html';
-      } else {
+      } catch (err) {
         errEl.style.display = 'block';
+        errEl.textContent = err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'
+          ? 'Incorrect email or password. Please try again.'
+          : (err.message || 'Sign in failed. Please try again.');
         document.getElementById('password').value = '';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
       }
     });
   </script>
