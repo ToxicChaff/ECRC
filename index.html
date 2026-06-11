@@ -131,112 +131,94 @@
 </section>
 
 <script>
-(function renderCalendar() {
-  const DEFAULT_EVENTS = [
-    { id: 'e1', type: 'ecrc_race', date: '2026-05-16', club: "St. Michael's RC", logo: 'Clubs Logo/SMRC.jpg', location: '', map: '#' },
-    { id: 'e2', type: 'ecrc_race', date: '2026-05-29', club: 'Dalkey RC',         logo: 'Clubs Logo/Dalkey RC.jpg', location: '', map: '#' },
-    { id: 'e3', type: 'ecrc_race', date: '2026-06-06', club: 'Skerries RC',        logo: 'Clubs Logo/Skerries RC.png', location: '', map: '#' },
-    { id: 'e4', type: 'ecrc_race', date: '2026-06-20', club: 'Stella Maris RC',    logo: 'Clubs Logo/Stella Maris RC.jpg', location: '', map: '#' },
-    { id: 'e5', type: 'ecrc_race', date: '2026-06-26', club: 'Bray RC',            logo: 'Clubs Logo/Bray RC.jpg', location: '', map: '#' },
-    { id: 'e6', type: 'ecrc_race', date: '2026-07-04', club: 'St. Patricks RC',    logo: 'Clubs Logo/St Pats RC.jpg', location: '', map: '#' },
-    { id: 'e7', type: 'ecrc_race', date: '2026-07-18', club: 'Fingal RC',          logo: 'Clubs Logo/Fingal RC.jpg', location: '', map: '#' },
-    { id: 'e8', type: 'ecrc_race', date: '2026-07-25', club: 'Greystones RC',      logo: 'Clubs Logo/Greystones Tc.jpg', location: '', map: '#' },
-    { id: 'e9', type: 'ecrc_race', date: '2026-08-01', club: 'Wicklow RC',         logo: 'Clubs Logo/Wicklow RC.jpg', location: '', map: '#' },
-  ];
+const CAL_TYPE_BADGE = {
+  ecrc_race: { label: 'ECRC Race',     bg: 'rgba(13,34,68,0.09)',    color: '#0d2244' },
+  charity:   { label: 'Charity Event', bg: 'rgba(22,163,74,0.12)',   color: '#15803d' },
+  other:     { label: 'Other',         bg: 'rgba(100,116,139,0.12)', color: '#475569' },
+};
+const CAL_MAP_ICON = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+let __calEvents = [];
 
-  let allEvents;
-  try { allEvents = JSON.parse(localStorage.getItem('ecrc_admin_events') || 'null') || DEFAULT_EVENTS; }
-  catch { allEvents = DEFAULT_EVENTS; }
-
-  const TYPE_BADGE = {
-    ecrc_race: { label: 'ECRC Race',     bg: 'rgba(13,34,68,0.09)',    color: '#0d2244' },
-    charity:   { label: 'Charity Event', bg: 'rgba(22,163,74,0.12)',   color: '#15803d' },
-    other:     { label: 'Other',         bg: 'rgba(100,116,139,0.12)', color: '#475569' },
-  };
-  const mapIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
-
-  // Build sorted list of unique years (newest first)
+function renderCalendar(events) {
+  __calEvents = events;
   const currentYear = new Date().getFullYear();
-  const yearsSet = new Set(allEvents.map(e => new Date(e.date).getFullYear()));
+  const yearsSet = new Set(events.map(e => new Date(e.date + 'T12:00:00').getFullYear()));
   if (!yearsSet.size) yearsSet.add(currentYear);
   const years = Array.from(yearsSet).sort((a, b) => b - a);
 
-  // Render year tabs
   const tabsEl = document.getElementById('cal-year-tabs');
   tabsEl.innerHTML = years.map((y, i) =>
     `<button class="res-year-btn${i === 0 ? ' active' : ''}" data-year="${y}" onclick="switchCalYear(${y}, this)">${y}</button>`
   ).join('');
 
-  function renderYear(year) {
-    const today = new Date(); today.setHours(0,0,0,0);
-    const isCurrentYear = year === currentYear;
+  renderCalYear(years[0]);
+}
 
-    let events = allEvents.filter(e => new Date(e.date).getFullYear() === year);
-    // Only hide past events for the current year
-    if (isCurrentYear) {
-      events = events.filter(e => new Date(e.endDate || e.date) >= today);
-    }
+function renderCalYear(year) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const currentYear = new Date().getFullYear();
+  const isCurrentYear = year === currentYear;
 
-    if (!events.length) {
-      document.getElementById('cal-render').innerHTML =
-        `<p style="color:var(--muted);text-align:center;padding:40px 0;">No events scheduled for ${year}.</p>`;
-      return;
-    }
+  let events = __calEvents.filter(e => new Date(e.date + 'T12:00:00').getFullYear() === year);
+  if (isCurrentYear) {
+    events = events.filter(e => new Date((e.endDate || e.date) + 'T12:00:00') >= today);
+  }
 
-    // Group by month
-    const months = {};
-    events.forEach(e => {
-      const d = new Date(e.date);
-      const key = d.getFullYear() + '-' + String(d.getMonth()).padStart(2,'0');
-      if (!months[key]) months[key] = { label: d.toLocaleDateString('en-IE', { month: 'long' }), year: d.getFullYear(), events: [] };
-      months[key].events.push(e);
-    });
+  if (!events.length) {
+    document.getElementById('cal-render').innerHTML =
+      `<p style="color:var(--muted);text-align:center;padding:40px 0;">No upcoming events for ${year}.</p>`;
+    return;
+  }
 
-    const html = Object.values(months).map(m => {
-      const cards = m.events.map(e => {
-        const d   = new Date(e.date);
-        const day = e.endDate ? `${d.getDate()}–${new Date(e.endDate).getDate()}` : d.getDate();
-        const mon = d.toLocaleDateString('en-IE', { month: 'short' }).toUpperCase();
-        const badge = TYPE_BADGE[e.type] || TYPE_BADGE.other;
-        const isFeatured = e.type !== 'ecrc_race';
-        return `<div class="cal-card${isFeatured ? ' cal-card-charity' : ''}">
-          ${isFeatured ? `<div class="cal-featured-badge" style="background:${badge.bg};color:${badge.color};">${badge.label}</div>` : ''}
-          <div class="cal-date-badge${e.endDate ? ' cal-date-multi' : ''}">
-            <span class="cal-day">${day}</span>
-            <span class="cal-mon">${mon}</span>
-          </div>
-          <div class="cal-logo"><img src="${e.logo}" alt="${e.club}" /></div>
-          <div class="cal-details">
-            <h4>${e.club}</h4>
-            <span class="cal-label">${badge.label}</span>
-          </div>
-          <a href="${e.map || '#'}" class="cal-map-btn" target="_blank" rel="noopener" title="Get Directions">
-            ${mapIcon} Get Directions
-          </a>
-        </div>`;
-      }).join('');
+  const months = {};
+  events.forEach(e => {
+    const d = new Date(e.date + 'T12:00:00');
+    const key = d.getFullYear() + '-' + String(d.getMonth()).padStart(2,'0');
+    if (!months[key]) months[key] = { label: d.toLocaleDateString('en-IE', { month: 'long' }), year: d.getFullYear(), events: [] };
+    months[key].events.push(e);
+  });
 
-      return `<div class="cal-month">
-        <div class="cal-month-header">
-          <span class="cal-month-name">${m.label}</span>
-          <span class="cal-month-year">${m.year}</span>
-          <span class="cal-month-count">${m.events.length} event${m.events.length !== 1 ? 's' : ''}</span>
+  const html = Object.values(months).map(m => {
+    const cards = m.events.map(e => {
+      const d   = new Date(e.date + 'T12:00:00');
+      const day = e.endDate ? `${d.getDate()}–${new Date(e.endDate + 'T12:00:00').getDate()}` : d.getDate();
+      const mon = d.toLocaleDateString('en-IE', { month: 'short' }).toUpperCase();
+      const badge = CAL_TYPE_BADGE[e.type] || CAL_TYPE_BADGE.other;
+      const isFeatured = e.type !== 'ecrc_race';
+      return `<div class="cal-card${isFeatured ? ' cal-card-charity' : ''}">
+        ${isFeatured ? `<div class="cal-featured-badge" style="background:${badge.bg};color:${badge.color};">${badge.label}</div>` : ''}
+        <div class="cal-date-badge${e.endDate ? ' cal-date-multi' : ''}">
+          <span class="cal-day">${day}</span>
+          <span class="cal-mon">${mon}</span>
         </div>
-        <div class="cal-grid">${cards}</div>
+        <div class="cal-logo"><img src="${e.logo}" alt="${e.club}" /></div>
+        <div class="cal-details">
+          <h4>${e.club}</h4>
+          <span class="cal-label">${badge.label}</span>
+        </div>
+        <a href="${e.map || '#'}" class="cal-map-btn" target="_blank" rel="noopener" title="Get Directions">
+          ${CAL_MAP_ICON} Get Directions
+        </a>
       </div>`;
     }).join('');
 
-    document.getElementById('cal-render').innerHTML = html;
-  }
+    return `<div class="cal-month">
+      <div class="cal-month-header">
+        <span class="cal-month-name">${m.label}</span>
+        <span class="cal-month-year">${m.year}</span>
+        <span class="cal-month-count">${m.events.length} event${m.events.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div class="cal-grid">${cards}</div>
+    </div>`;
+  }).join('');
 
-  window.switchCalYear = function(year, btn) {
-    document.querySelectorAll('#cal-year-tabs .res-year-btn').forEach(b => b.classList.toggle('active', b === btn));
-    renderYear(year);
-  };
+  document.getElementById('cal-render').innerHTML = html;
+}
 
-  // Default: show the most recent year (index 0)
-  renderYear(years[0]);
-})();
+window.switchCalYear = function(year, btn) {
+  document.querySelectorAll('#cal-year-tabs .res-year-btn').forEach(b => b.classList.toggle('active', b === btn));
+  renderCalYear(year);
+};
 </script>
 
   <!-- ── results ── -->
@@ -263,20 +245,7 @@
 </section>
 
 <script>
-/* All results data loaded from Firestore; falls back to default schedule when Firestore has no events yet */
 const ECRC_RESULTS = {};
-
-const HOME_DEFAULT_EVENTS = [
-  { id: 'e1', type: 'ecrc_race', date: '2026-05-16', club: "St. Michael's RC", logo: 'Clubs Logo/SMRC.jpg' },
-  { id: 'e2', type: 'ecrc_race', date: '2026-05-29', club: 'Dalkey RC',         logo: 'Clubs Logo/Dalkey RC.jpg' },
-  { id: 'e3', type: 'ecrc_race', date: '2026-06-06', club: 'Skerries RC',       logo: 'Clubs Logo/Skerries RC.png' },
-  { id: 'e4', type: 'ecrc_race', date: '2026-06-20', club: 'Stella Maris RC',   logo: 'Clubs Logo/Stella Maris RC.jpg' },
-  { id: 'e5', type: 'ecrc_race', date: '2026-06-26', club: 'Bray RC',           logo: 'Clubs Logo/Bray RC.jpg' },
-  { id: 'e6', type: 'ecrc_race', date: '2026-07-04', club: 'Arklow RC',         logo: 'Clubs Logo/Arklow RC.jpg' },
-  { id: 'e7', type: 'ecrc_race', date: '2026-07-11', club: 'Fingal RC',         logo: 'Clubs Logo/Fingal RC.jpg' },
-  { id: 'e8', type: 'ecrc_race', date: '2026-07-25', club: 'Greystones RC',     logo: 'Clubs Logo/Greystones Tc.jpg' },
-  { id: 'e9', type: 'ecrc_race', date: '2026-08-01', club: 'Wicklow RC',        logo: 'Clubs Logo/Wicklow RC.jpg' },
-];
 
 const CATEGORIES = [
   "Under 12 Boys",
@@ -400,19 +369,20 @@ function switchRegatta(year, id, btn) {
     ]).then(([rSnap, eSnap]) => {
       const allYears = new Set();
 
-      // Use Firestore events if available, otherwise fall back to default schedule
       const rawEvents = (eSnap.exists && eSnap.data().data && eSnap.data().data.length)
-        ? eSnap.data().data
-        : HOME_DEFAULT_EVENTS;
+        ? eSnap.data().data : [];
+
+      // Feed calendar from Firestore
+      renderCalendar(rawEvents);
 
       rawEvents
         .filter(e => e.type === 'ecrc_race')
         .sort((a, b) => new Date(a.date) - new Date(b.date))
         .forEach(e => {
-          const yr = String(new Date(e.date).getFullYear());
+          const yr = String(new Date(e.date + 'T12:00:00').getFullYear());
           allYears.add(yr);
           if (!ECRC_RESULTS[yr]) ECRC_RESULTS[yr] = { regattas: [], results: {} };
-          const d = new Date(e.date);
+          const d = new Date(e.date + 'T12:00:00');
           const dateStr = d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
           const short = e.club.replace(/ RC$/, '').replace(/ Rowing Club$/, '');
           ECRC_RESULTS[yr].regattas.push({ id: e.id, short, date: dateStr, logo: e.logo, name: e.club });

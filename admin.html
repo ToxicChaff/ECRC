@@ -2401,6 +2401,7 @@ function renderSubmitTable() {
   const saveRow = canEdit ? `
     <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <button class="btn-primary" onclick="saveAllCrews()">&#10003; Save All Crews</button>
+      <button class="btn-secondary" onclick="copyFromPreviousRace()">&#8635; Copy from Previous Race</button>
       ${userRole === 'admin' ? `<button class="btn-danger" onclick="clearAllCrewsForRegatta()">&#128465; Clear All Crews for This Regatta</button>` : ''}
       <span style="font-size:0.75rem;color:var(--muted);">Empty cells are ignored. Cox duplicates are permitted.</span>
     </div>` : '';
@@ -2423,7 +2424,78 @@ function renderSubmitTable() {
   `;
 }
 
-function saveAllCrews() {
+function copyFromPreviousRace() {
+  if (!crewCurrentRegattaId) { showToast('Please select a regatta first', 'error'); return; }
+
+  // Find regattas for this year in date order
+  const events = getEvents()
+    .filter(e => e.type === 'ecrc_race' && new Date(e.date + 'T12:00:00').getFullYear() === parseInt(crewCurrentYear))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  const idx = events.findIndex(e => e.id === crewCurrentRegattaId);
+  if (idx <= 0) { showToast('No previous race to copy from', 'error'); return; }
+
+  const prevRegatta = events[idx - 1];
+  let prevCrews = getCrews().filter(c => c.year === crewCurrentYear && c.regattaId === prevRegatta.id);
+  if (userRole === 'club') prevCrews = prevCrews.filter(c => c.club === userClub);
+
+  if (!prevCrews.length) {
+    showToast(`No crews found for ${prevRegatta.club}`, 'error');
+    return;
+  }
+
+  // Save any current edits so we don't blow them away
+  captureSubmitDraft();
+
+  const clubs = userRole === 'club' ? [userClub] : ALL_CLUBS;
+  clubs.forEach(club => {
+    const clubPrev = prevCrews.filter(c => c.club === club);
+    if (!clubPrev.length) return;
+
+    // Group previous entries by category
+    const catMap = {};
+    clubPrev.forEach(e => {
+      if (!catMap[e.category]) catMap[e.category] = [];
+      catMap[e.category].push(e);
+    });
+
+    // How many rows are already saved for this club+regatta?
+    const savedForClub = getCrews().filter(c =>
+      c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId && c.club === club
+    );
+    const savedCatMap = {};
+    savedForClub.forEach(e => {
+      if (!savedCatMap[e.category]) savedCatMap[e.category] = [];
+      savedCatMap[e.category].push(e);
+    });
+    const maxSaved = Math.max(0, ...Object.values(savedCatMap).map(a => a.length));
+    const maxNeeded = Math.max(...Object.values(catMap).map(a => a.length));
+
+    // Ensure enough rows are visible
+    submitExtraRows[club] = Math.max(submitExtraRows[club] || 0, Math.max(0, maxNeeded - maxSaved));
+
+    // Populate draft data — skip cells that already have content
+    Object.entries(catMap).forEach(([cat, entries]) => {
+      entries.forEach((entry, i) => {
+        const key = `${club}|${i + 1}|${cat}`;
+        const existing = submitDraftData[key];
+        const hasContent = existing && (existing.rowers.some(r => r) || existing.cox);
+        if (!hasContent) {
+          submitDraftData[key] = {
+            rowers: [...(entry.rowers || ['', '', '', ''])],
+            cox: entry.cox || '',
+            id: ''
+          };
+        }
+      });
+    });
+  });
+
+  renderSubmitTable();
+  showToast(`Crews copied from ${prevRegatta.club} — review and save when ready`);
+}
+
+async function saveAllCrews() {
   if (!crewCurrentRegattaId) { showToast('Please select a regatta first', 'error'); return; }
   if (isDrawLocked()) { showToast('Crew submissions are locked', 'error'); return; }
 
@@ -2445,12 +2517,24 @@ function saveAllCrews() {
     });
   });
 
-  const kept = getCrews().filter(c => {
+  // Always read latest from Firestore before merging to avoid overwriting other clubs' data
+  let freshCrews = [];
+  try {
+    const snap = await db.collection('settings').doc('crews').get();
+    if (snap.exists && snap.data().data) freshCrews = snap.data().data;
+  } catch (e) {
+    // Fall back to localStorage if offline
+    freshCrews = getCrews();
+  }
+
+  const kept = freshCrews.filter(c => {
     if (c.year !== crewCurrentYear || c.regattaId !== crewCurrentRegattaId) return true;
     if (userRole === 'club' && c.club !== userClub) return true;
     return false;
   });
-  saveCrewsData(kept.concat(newEntries));
+  const merged = kept.concat(newEntries);
+  localStorage.setItem('ecrc_admin_crews', JSON.stringify(merged));
+  await db.collection('settings').doc('crews').set({ data: merged });
 
   // Keep extra cats that now have data; clear draft and extra rows
   submitDraftData  = {};
