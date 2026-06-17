@@ -1505,7 +1505,7 @@ async function renderAccounts() {
         const logoSrc = CLUB_LOGOS[clubName] || '';
         const logoImg = logoSrc ? `<img src="${logoSrc}" style="width:16px;height:16px;border-radius:2px;object-fit:contain;margin-right:5px;vertical-align:middle;" />` : '';
         return `<button class="acc-club-tab${clubName === firstClub ? ' active' : ''}"
-          onclick="showClubTab('${escHtml(clubName)}', this)"
+          onclick="showClubTab('${escJsAttr(clubName)}', this)"
           style="display:inline-flex;align-items:center;padding:7px 14px;border-radius:20px;border:1px solid var(--border);
             background:${clubName === firstClub ? 'var(--navy)' : 'var(--off-white)'};
             color:${clubName === firstClub ? '#fff' : 'var(--navy)'};
@@ -1670,6 +1670,12 @@ function saveCrewsData(c) {
 
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Safe for embedding inside a single-quoted JS string literal within an onclick="" attribute
+// (e.g. club names like "St. Michael's RC" contain an apostrophe that would otherwise break the string)
+function escJsAttr(s) {
+  return escHtml(String(s || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'"));
 }
 
 let crewCurrentYear = String(new Date().getFullYear());
@@ -2150,7 +2156,7 @@ function renderDrawSheet() {
     return `<th class="draw-cat-header-cell">
       <div style="font-size:1rem;font-weight:900;font-family:'Merriweather',serif;line-height:1;margin-bottom:3px;">${count}</div>
       <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.05em;${canEditDraw ? 'margin-bottom:6px;' : ''}white-space:normal;">${escHtml(cat)}</div>
-      ${canEditDraw ? `<button class="crew-add-btn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.28);color:#fff;font-size:0.65rem;" onclick="drawLanes('${escHtml(cat)}')">
+      ${canEditDraw ? `<button class="crew-add-btn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.28);color:#fff;font-size:0.65rem;" onclick="drawLanes('${escJsAttr(cat)}')">
         &#127922; ${allDone ? 'Redraw' : 'Draw'}
       </button>` : ''}
     </th>`;
@@ -2392,7 +2398,7 @@ function renderSubmitTable() {
     if (canEdit) {
       bodyHtml += `<tr class="submit-add-crew-tr">
         <td colspan="${usedCats.length + 1 + (addCatTh ? 1 : 0)}" style="background:${bg};border-bottom:2px solid var(--border);padding:5px 10px;">
-          <button class="crew-add-btn" onclick="addSubmitCrew('${escHtml(club)}')">+ Add Crew for ${escHtml(club)}</button>
+          <button class="crew-add-btn" onclick="addSubmitCrew('${escJsAttr(club)}')">+ Add Crew for ${escHtml(club)}</button>
         </td>
       </tr>`;
     }
