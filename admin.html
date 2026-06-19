@@ -276,6 +276,8 @@
     .draw-lane-input { width: 60px; text-align: center; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 4px 6px; color: white; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700; outline: none; }
     .draw-lane-input:focus { border-color: var(--gold); }
     .draw-cat-header-cell { background: var(--navy); color: white; padding: 8px 10px; text-align: center; border-left: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.15); vertical-align: bottom; min-width: 160px; }
+    .draw-heat-subheader { background: var(--navy-mid); color: rgba(255,255,255,0.85); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 5px 6px; text-align: center; border-left: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.15); min-width: 90px; }
+    .draw-heat-bracket { display: block; font-size: 0.62rem; color: var(--muted); margin-top: 2px; font-weight: 600; }
     .draw-row-label { padding: 7px 14px; border-bottom: 1px solid var(--border); position: sticky; left: 0; z-index: 1; border-right: 2px solid var(--border); white-space: nowrap; font-size: 0.82rem; vertical-align: middle; }
     .draw-result-cell { text-align: center; padding: 7px 8px; border-bottom: 1px solid var(--border); border-left: 1px solid rgba(226,232,240,0.5); vertical-align: middle; min-width: 80px; }
     .draw-empty-cell { border-bottom: 1px solid var(--border); border-left: 1px solid rgba(226,232,240,0.5); }
@@ -967,6 +969,8 @@ fbAuth.onAuthStateChanged(async (user) => {
         v ? localStorage.setItem(`ecrc_crew_lock_${k}`, '1') : localStorage.removeItem(`ecrc_crew_lock_${k}`));
       if (ld.categoryOrder) Object.entries(ld.categoryOrder).forEach(([k, v]) =>
         localStorage.setItem(`ecrc_cat_order_${k}`, JSON.stringify(v)));
+      if (ld.maxLanes) Object.entries(ld.maxLanes).forEach(([k, v]) =>
+        localStorage.setItem(`ecrc_max_lanes_${k}`, String(v)));
     } else {
       // First login — push any existing local lane data up to Firestore
       const localLanes = localStorage.getItem('ecrc_admin_lanes');
@@ -2024,6 +2028,7 @@ function syncLaneDataToFirestore() {
   const laneStarts = {};
   const crewLocks  = {};
   const categoryOrder = {};
+  const maxLanes = {};
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key) continue;
@@ -2033,10 +2038,44 @@ function syncLaneDataToFirestore() {
       crewLocks[key.replace('ecrc_crew_lock_', '')] = localStorage.getItem(key) === '1';
     if (key.startsWith('ecrc_cat_order_'))
       try { categoryOrder[key.replace('ecrc_cat_order_', '')] = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+    if (key.startsWith('ecrc_max_lanes_'))
+      maxLanes[key.replace('ecrc_max_lanes_', '')] = parseInt(localStorage.getItem(key)) || 10;
   }
   db.collection('settings').doc('laneData').set({
-    lanes: getLaneData(), laneStarts, crewLocks, categoryOrder
+    lanes: getLaneData(), laneStarts, crewLocks, categoryOrder, maxLanes
   }).catch(e => console.warn('LaneData save:', e));
+}
+
+/* ─── Max lanes / heat splitting ─── */
+function maxLanesKey() { return `ecrc_max_lanes_${crewCurrentYear}_${crewCurrentRegattaId}`; }
+function getMaxLanes() {
+  const v = parseInt(localStorage.getItem(maxLanesKey()));
+  return (v && v > 0) ? v : 10;
+}
+function saveMaxLanes(val) {
+  if (userRole !== 'admin') return;
+  const n = Math.max(1, parseInt(val) || 10);
+  localStorage.setItem(maxLanesKey(), String(n));
+  syncLaneDataToFirestore();
+  renderDrawSheet();
+}
+// Splits `total` crews into the fewest possible heats of at most `maxLanes`,
+// distributed as evenly as possible (e.g. 8 boats / 7 lanes -> heats of 4+4, not 7+1).
+function computeHeatSizes(total, maxLanes) {
+  const numHeats = Math.max(1, Math.ceil(total / maxLanes));
+  const base = Math.floor(total / numHeats);
+  const rem  = total % numHeats;
+  return Array.from({ length: numHeats }, (_, h) => base + (h < rem ? 1 : 0));
+}
+// Given a crew's overall draw number, returns which heat it falls in and its lane within that heat.
+function getHeatPlacement(drawNumber, startLane, sizes) {
+  const position = drawNumber - startLane + 1;
+  let cumulative = 0;
+  for (let h = 0; h < sizes.length; h++) {
+    if (position <= cumulative + sizes[h]) return { heat: h + 1, laneInHeat: position - cumulative };
+    cumulative += sizes[h];
+  }
+  return { heat: sizes.length, laneInHeat: position - cumulative };
 }
 
 /* ─── Draw Sheet running order (admin-only, independent of crew/lane locks) ─── */
@@ -2159,7 +2198,20 @@ function renderDrawSheet() {
   const usedCats  = getOrderedCategories(usedCatsDefault);
   const laneData  = getLaneData();
   const laneStarts = getLaneStarts();
+  const maxLanes  = getMaxLanes();
   const clubs     = [...new Set(all.map(c => c.club))].sort();
+
+  // Per-category heat info. Heats only appear once a category has been fully drawn —
+  // before that we don't yet know which crew lands in which heat.
+  const catInfo = {};
+  usedCats.forEach(cat => {
+    const entries    = all.filter(c => c.category === cat);
+    const count      = entries.length;
+    const startLane  = laneStarts[cat] || 1;
+    const drawn      = count > 0 && entries.every(e => laneData[e.id]);
+    const sizes      = drawn ? computeHeatSizes(count, maxLanes) : [count];
+    catInfo[cat] = { count, startLane, drawn, sizes, numHeats: sizes.length };
+  });
 
   // Same pivot as Overview: one row per (club, crewNum), columns = categories
   const matrixRows = [];
@@ -2181,11 +2233,11 @@ function renderDrawSheet() {
 
   const canEditDraw = userRole === 'admin';
 
-  // Header row 1 — lane start inputs (admin) or static value (club)
+  // Header row 1 — lane start inputs (admin) or static value (club), spans all heats for the category
   const laneInputRow = usedCats.map(cat => {
-    const startVal = laneStarts[cat] || 1;
+    const startVal = catInfo[cat].startLane;
     const sid = 'ls_' + cat.replace(/[^a-zA-Z0-9]/g, '_');
-    return `<td class="draw-lane-start-row">
+    return `<td class="draw-lane-start-row" colspan="${catInfo[cat].numHeats}">
       <span class="draw-lane-input-label">Lane start</span>
       ${canEditDraw
         ? `<input type="number" id="${sid}" value="${startVal}" min="1" max="99" class="draw-lane-input" onchange="saveLaneStart('${escHtml(cat)}', this.value)" />`
@@ -2193,11 +2245,10 @@ function renderDrawSheet() {
     </td>`;
   }).join('');
 
-  // Header row 2 — category name + count + draw button (admin only)
+  // Header row 2 — category name + count + draw button (admin only), spans all heats for the category
   const catHeaderRow = usedCats.map((cat, index) => {
-    const count = all.filter(c => c.category === cat).length;
-    const allDone = all.filter(c => c.category === cat).every(c => laneData[c.id]);
-    return `<th class="draw-cat-header-cell">
+    const count = catInfo[cat].count;
+    return `<th class="draw-cat-header-cell" colspan="${catInfo[cat].numHeats}">
       <div style="font-size:1.15rem;font-weight:900;font-family:'Merriweather',serif;line-height:1;margin-bottom:4px;">${count}</div>
       <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.03em;margin-bottom:${canEditDraw ? '7px' : '0'};white-space:normal;line-height:1.25;">
         ${canEditDraw
@@ -2207,21 +2258,50 @@ function renderDrawSheet() {
           : escHtml(cat)}
       </div>
       ${canEditDraw ? `<button class="crew-add-btn" style="background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.28);color:#fff;font-size:0.65rem;" onclick="drawLanes('${escJsAttr(cat)}')">
-        &#127922; ${allDone ? 'Redraw' : 'Draw'}
+        &#127922; ${catInfo[cat].drawn ? 'Redraw' : 'Draw'}
       </button>` : ''}
     </th>`;
+  }).join('');
+
+  // Header row 3 — heat sub-columns (only shown once a category splits into more than one heat)
+  const heatSubHeaderRow = usedCats.map(cat => {
+    const { numHeats } = catInfo[cat];
+    if (numHeats <= 1) return `<th class="draw-heat-subheader"></th>`;
+    return Array.from({ length: numHeats }, (_, h) =>
+      `<th class="draw-heat-subheader">Heat ${h + 1}</th>`
+    ).join('');
   }).join('');
 
   // Body rows
   const bodyRows = matrixRows.map(row => {
     const bg = getClubColor(row.club);
     const cells = usedCats.map(cat => {
+      const info  = catInfo[cat];
       const entry = row.rowEntries[cat];
-      if (!entry) return `<td class="draw-empty-cell" style="background:${bg};"></td>`;
-      const lane = laneData[entry.id];
-      return `<td class="draw-result-cell" style="background:${bg};">
-        ${lane ? `<span class="draw-lane-num">${lane}</span>` : '<span class="draw-x">&#10005;</span>'}
-      </td>`;
+
+      if (info.numHeats <= 1) {
+        if (!entry) return `<td class="draw-empty-cell" style="background:${bg};"></td>`;
+        const lane = laneData[entry.id];
+        return `<td class="draw-result-cell" style="background:${bg};">
+          ${lane ? `<span class="draw-lane-num">${lane}</span>` : '<span class="draw-x">&#10005;</span>'}
+        </td>`;
+      }
+
+      // Multi-heat category: place the crew's result in its assigned heat column, blank elsewhere
+      let placement = null;
+      const lane = entry ? laneData[entry.id] : null;
+      if (lane) placement = getHeatPlacement(lane, info.startLane, info.sizes);
+
+      return Array.from({ length: info.numHeats }, (_, h) => {
+        const heatNum = h + 1;
+        if (!entry || !placement || placement.heat !== heatNum) {
+          return `<td class="draw-empty-cell" style="background:${bg};"></td>`;
+        }
+        return `<td class="draw-result-cell" style="background:${bg};">
+          <span class="draw-lane-num">${lane}</span>
+          ${heatNum > 1 ? `<span class="draw-heat-bracket">(Lane ${placement.laneInHeat})</span>` : ''}
+        </td>`;
+      }).join('');
     }).join('');
 
     return `<tr>
@@ -2237,6 +2317,10 @@ function renderDrawSheet() {
   const anyLaneDrawn   = all.some(c => laneData[c.id]);
 
   const adminBtns = userRole === 'admin' ? `
+    <div style="display:flex;align-items:center;gap:6px;">
+      <label style="font-size:0.75rem;font-weight:600;color:var(--muted);">Max Lanes:</label>
+      <input type="number" min="1" max="50" value="${maxLanes}" style="width:60px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Inter',sans-serif;font-size:0.85rem;color:var(--navy);" onchange="saveMaxLanes(this.value)" />
+    </div>
     <button class="btn-primary" onclick="drawAllLanes()" style="font-size:0.78rem;background:var(--navy);border-color:var(--navy);">&#127922; Draw All</button>
     <button class="${explicitLocked ? 'btn-danger' : 'btn-secondary'}" onclick="toggleCrewLock()" style="font-size:0.78rem;">
       ${explicitLocked ? '&#128274; Unlock Crews' : '&#128275; Lock Crews'}
@@ -2271,10 +2355,11 @@ function renderDrawSheet() {
       <table class="draw-matrix-table">
         <thead>
           <tr class="draw-lane-start-row">
-            <td rowspan="2" class="draw-club-col">Club</td>
+            <td rowspan="3" class="draw-club-col">Club</td>
             ${laneInputRow}
           </tr>
           <tr>${catHeaderRow}</tr>
+          <tr>${heatSubHeaderRow}</tr>
         </thead>
         <tbody>${bodyRows}</tbody>
       </table>
@@ -2289,10 +2374,25 @@ function downloadDrawSheetCSV() {
   const usedCatsDefault = CATEGORIES.filter(cat => all.some(c => c.category === cat));
   const usedCats = getOrderedCategories(usedCatsDefault);
   const laneData = getLaneData();
+  const laneStarts = getLaneStarts();
+  const maxLanes = getMaxLanes();
   const clubs    = [...new Set(all.map(c => c.club))].sort();
   const q = s => `"${String(s || '').replace(/"/g, '""')}"`;
 
-  const lines = [['Club', 'Crew', ...usedCats].map(q).join(',')];
+  // Mirror the same per-category heat split shown on screen
+  const catInfo = {};
+  const colLabels = [];
+  usedCats.forEach(cat => {
+    const entries   = all.filter(c => c.category === cat);
+    const count     = entries.length;
+    const startLane = laneStarts[cat] || 1;
+    const drawn     = count > 0 && entries.every(e => laneData[e.id]);
+    const sizes     = drawn ? computeHeatSizes(count, maxLanes) : [count];
+    catInfo[cat] = { startLane, sizes, numHeats: sizes.length };
+    sizes.forEach((_, h) => colLabels.push(sizes.length > 1 ? `${cat} (Heat ${h + 1})` : cat));
+  });
+
+  const lines = [['Club', 'Crew', ...colLabels].map(q).join(',')];
   clubs.forEach(club => {
     const catMap = {};
     all.filter(c => c.club === club).forEach(e => {
@@ -2301,9 +2401,24 @@ function downloadDrawSheetCSV() {
     });
     const maxN = Math.max(0, ...Object.values(catMap).map(a => a.length));
     for (let n = 1; n <= maxN; n++) {
-      const cells = usedCats.map(cat => {
-        const e = catMap[cat]?.[n - 1];
-        return e ? q(laneData[e.id] || 'X') : '""';
+      const cells = [];
+      usedCats.forEach(cat => {
+        const info = catInfo[cat];
+        const e    = catMap[cat]?.[n - 1];
+        const lane = e ? laneData[e.id] : null;
+        if (info.numHeats <= 1) {
+          cells.push(e ? q(lane || 'X') : '""');
+          return;
+        }
+        const placement = lane ? getHeatPlacement(lane, info.startLane, info.sizes) : null;
+        for (let h = 1; h <= info.numHeats; h++) {
+          if (!e) { cells.push('""'); continue; }
+          if (placement && placement.heat === h) {
+            cells.push(q(h > 1 ? `${lane} (Lane ${placement.laneInHeat})` : lane));
+          } else {
+            cells.push('""');
+          }
+        }
       });
       lines.push([q(club), q(`Crew ${n}`), ...cells].join(','));
     }
