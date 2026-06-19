@@ -275,7 +275,7 @@
     .draw-lane-input-label { display: block; font-size: 0.6rem; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
     .draw-lane-input { width: 60px; text-align: center; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 4px 6px; color: white; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700; outline: none; }
     .draw-lane-input:focus { border-color: var(--gold); }
-    .draw-cat-header-cell { background: var(--navy); color: white; padding: 8px 10px; text-align: center; border-left: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.15); vertical-align: bottom; }
+    .draw-cat-header-cell { background: var(--navy); color: white; padding: 8px 10px; text-align: center; border-left: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid rgba(255,255,255,0.15); vertical-align: bottom; min-width: 160px; }
     .draw-row-label { padding: 7px 14px; border-bottom: 1px solid var(--border); position: sticky; left: 0; z-index: 1; border-right: 2px solid var(--border); white-space: nowrap; font-size: 0.82rem; vertical-align: middle; }
     .draw-result-cell { text-align: center; padding: 7px 8px; border-bottom: 1px solid var(--border); border-left: 1px solid rgba(226,232,240,0.5); vertical-align: middle; min-width: 80px; }
     .draw-empty-cell { border-bottom: 1px solid var(--border); border-left: 1px solid rgba(226,232,240,0.5); }
@@ -2198,10 +2198,10 @@ function renderDrawSheet() {
     const count = all.filter(c => c.category === cat).length;
     const allDone = all.filter(c => c.category === cat).every(c => laneData[c.id]);
     return `<th class="draw-cat-header-cell">
-      <div style="font-size:1rem;font-weight:900;font-family:'Merriweather',serif;line-height:1;margin-bottom:3px;">${count}</div>
-      <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.05em;margin-bottom:${canEditDraw ? '6px' : '0'};white-space:normal;">
+      <div style="font-size:1.15rem;font-weight:900;font-family:'Merriweather',serif;line-height:1;margin-bottom:4px;">${count}</div>
+      <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.03em;margin-bottom:${canEditDraw ? '7px' : '0'};white-space:normal;line-height:1.25;">
         ${canEditDraw
-          ? `<select onchange="setCategoryRunOrder(${index}, this.value)" style="width:100%;font-size:0.62rem;font-weight:700;letter-spacing:0.05em;padding:2px 3px;border-radius:4px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.92);color:var(--navy);font-family:'Inter',sans-serif;">
+          ? `<select onchange="setCategoryRunOrder(${index}, this.value)" style="width:100%;font-size:0.78rem;font-weight:700;letter-spacing:0.03em;padding:5px 4px;border-radius:4px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.95);color:var(--navy);font-family:'Inter',sans-serif;">
               ${usedCats.map(c => `<option value="${escHtml(c)}" ${c === cat ? 'selected' : ''}>${escHtml(c)}</option>`).join('')}
             </select>`
           : escHtml(cat)}
