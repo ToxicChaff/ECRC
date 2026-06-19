@@ -2019,9 +2019,25 @@ function laneStartKey() { return `ecrc_lane_starts_${crewCurrentYear}_${crewCurr
 function getLaneStarts() { try { return JSON.parse(localStorage.getItem(laneStartKey()) || '{}'); } catch { return {}; } }
 function saveLaneStart(category, val) {
   const d = getLaneStarts();
-  d[category] = Math.max(1, parseInt(val) || 1);
+  const oldStart = d[category] || 1;
+  const newStart = Math.max(1, parseInt(val) || 1);
+  d[category] = newStart;
   localStorage.setItem(laneStartKey(), JSON.stringify(d));
+
+  // Shift any already-drawn numbers for this category by the same offset, so
+  // e.g. switching from lane 1 to lane 2 bumps every existing draw up by one.
+  const diff = newStart - oldStart;
+  if (diff !== 0) {
+    const entries = getCrews().filter(c =>
+      c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId && c.category === category
+    );
+    const laneData = getLaneData();
+    entries.forEach(e => { if (laneData[e.id]) laneData[e.id] += diff; });
+    localStorage.setItem('ecrc_admin_lanes', JSON.stringify(laneData));
+  }
+
   syncLaneDataToFirestore();
+  renderDrawSheet();
 }
 
 function syncLaneDataToFirestore() {
