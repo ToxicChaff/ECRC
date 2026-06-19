@@ -2107,10 +2107,10 @@ function getHeatPlacement(drawNumber, startLane, sizes) {
   const position = drawNumber - startLane + 1;
   let cumulative = 0;
   for (let h = 0; h < sizes.length; h++) {
-    if (position <= cumulative + sizes[h]) return { heat: h + 1, laneInHeat: position - cumulative };
+    if (position <= cumulative + sizes[h]) return { heat: h + 1, laneInHeat: (position - cumulative) + (startLane - 1) };
     cumulative += sizes[h];
   }
-  return { heat: sizes.length, laneInHeat: position - cumulative };
+  return { heat: sizes.length, laneInHeat: (position - cumulative) + (startLane - 1) };
 }
 
 /* ─── Draw Sheet running order (admin-only, independent of crew/lane locks) ─── */
