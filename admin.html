@@ -12,6 +12,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+  <!-- Excel export (community fork of SheetJS with style-writing support) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -1666,6 +1668,24 @@ function getClubColor(club) {
   return i >= 0 ? CLUB_COLORS[i] : 'transparent';
 }
 
+// Solid colors for the printed Draw Sheet Excel export (distinct from the pastel CLUB_COLORS above)
+const CLUB_XLSX_COLORS = {
+  'Arklow RC':        { bg: 'F97316', text: '000000' }, // orange
+  'Bray RC':          { bg: 'FFEB3B', text: '000000' }, // yellow
+  'Dalkey RC':        { bg: 'E53935', text: '000000' }, // red
+  'Fingal RC':        { bg: '2196F3', text: '000000' }, // blue
+  'Greystones RC':    { bg: '000000', text: 'FFFFFF' }, // black
+  'Skerries RC':      { bg: 'FFF59D', text: '000000' }, // light yellow
+  "St. Michael's RC": { bg: '0D2244', text: 'FFFFFF' }, // navy
+  'St. Patricks RC':  { bg: '43A047', text: '000000' }, // green
+  'Stella Maris RC':  { bg: 'B0BEC5', text: '000000' }, // light blue/grey
+  'Vartry RC':        { bg: '8E24AA', text: 'FFFFFF' }, // purple
+  'Wicklow RC':       { bg: '1565C0', text: 'FFFFFF' }, // dark blue
+};
+function getClubXlsxColor(club) {
+  return CLUB_XLSX_COLORS[club] || { bg: 'FFFFFF', text: '000000' };
+}
+
 function getCrews() {
   try { return JSON.parse(localStorage.getItem('ecrc_admin_crews') || '[]'); } catch { return []; }
 }
@@ -2392,7 +2412,7 @@ function renderDrawSheet() {
   el.innerHTML = `
     ${lockBanner}
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-      <button class="btn-secondary" onclick="downloadDrawSheetCSV()" style="font-size:0.78rem;">&#8659; Download CSV</button>
+      <button class="btn-secondary" onclick="downloadDrawSheetXLSX()" style="font-size:0.78rem;">&#8659; Download Excel</button>
       <button class="btn-secondary" onclick="window.print()" style="font-size:0.78rem;">&#128438; Print / PDF</button>
       ${adminBtns}
     </div>
@@ -2412,9 +2432,10 @@ function renderDrawSheet() {
   `;
 }
 
-function downloadDrawSheetCSV() {
+function downloadDrawSheetXLSX() {
   const all = getCrews().filter(c => c.year === crewCurrentYear && c.regattaId === crewCurrentRegattaId);
   if (!all.length) { showToast('No data to export', 'error'); return; }
+  if (typeof XLSX === 'undefined') { showToast('Excel export library failed to load', 'error'); return; }
 
   const usedCatsDefault = CATEGORIES.filter(cat => all.some(c => c.category === cat));
   const usedCats = getOrderedCategories(usedCatsDefault);
@@ -2422,11 +2443,9 @@ function downloadDrawSheetCSV() {
   const laneStarts = getLaneStarts();
   const maxLanes = getMaxLanes();
   const clubs    = [...new Set(all.map(c => c.club))].sort();
-  const q = s => `"${String(s || '').replace(/"/g, '""')}"`;
 
   // Mirror the same per-category heat split shown on screen
   const catInfo = {};
-  const colLabels = [];
   usedCats.forEach(cat => {
     const entries   = all.filter(c => c.category === cat);
     const count     = entries.length;
@@ -2434,10 +2453,37 @@ function downloadDrawSheetCSV() {
     const drawn     = count > 0 && entries.every(e => laneData[e.id]);
     const sizes     = drawn ? computeHeatSizes(count, maxLanes) : [count];
     catInfo[cat] = { startLane, sizes, numHeats: sizes.length };
-    sizes.forEach((_, h) => colLabels.push(sizes.length > 1 ? `${cat} (Heat ${h + 1})` : cat));
   });
 
-  const lines = [['Club', 'Crew', ...colLabels].map(q).join(',')];
+  // Column layout: col 0 = Club, then one column per heat sub-column
+  const colMeta = []; // { cat, heatIndex, col }
+  let nextCol = 1;
+  usedCats.forEach(cat => {
+    for (let h = 1; h <= catInfo[cat].numHeats; h++) {
+      colMeta.push({ cat, heatIndex: h, col: nextCol });
+      nextCol++;
+    }
+  });
+  const totalCols = nextCol;
+
+  const headerRow1 = new Array(totalCols).fill('');
+  const headerRow2 = new Array(totalCols).fill('');
+  headerRow1[0] = 'Club';
+  const merges = [{ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }];
+
+  usedCats.forEach(cat => {
+    const meta = colMeta.filter(m => m.cat === cat);
+    const startCol = meta[0].col;
+    const endCol   = meta[meta.length - 1].col;
+    headerRow1[startCol] = cat;
+    if (endCol > startCol) merges.push({ s: { r: 0, c: startCol }, e: { r: 0, c: endCol } });
+    if (meta.length > 1) meta.forEach(m => { headerRow2[m.col] = `Heat ${m.heatIndex}`; });
+  });
+
+  const aoa = [headerRow1, headerRow2];
+  const colCounts = new Array(totalCols).fill(0);
+  const rowClubs  = []; // club name per body row, for styling lookup (index aligned to aoa, offset by header rows)
+
   clubs.forEach(club => {
     const catMap = {};
     all.filter(c => c.club === club).forEach(e => {
@@ -2446,37 +2492,74 @@ function downloadDrawSheetCSV() {
     });
     const maxN = Math.max(0, ...Object.values(catMap).map(a => a.length));
     for (let n = 1; n <= maxN; n++) {
-      const cells = [];
+      const row = new Array(totalCols).fill('');
+      row[0] = `${club} ${crewLetter(n)}`;
       usedCats.forEach(cat => {
         const info = catInfo[cat];
         const e    = catMap[cat]?.[n - 1];
         const lane = e ? laneData[e.id] : null;
+        const meta = colMeta.filter(m => m.cat === cat);
         if (info.numHeats <= 1) {
-          cells.push(e ? q(lane || 'X') : '""');
+          if (e) { row[meta[0].col] = lane || 'X'; colCounts[meta[0].col]++; }
           return;
         }
-        const placement = lane ? getHeatPlacement(lane, info.startLane, info.sizes) : null;
-        for (let h = 1; h <= info.numHeats; h++) {
-          if (!e) { cells.push('""'); continue; }
-          if (placement && placement.heat === h) {
-            cells.push(q(h > 1 ? `${lane} (Lane ${placement.laneInHeat})` : lane));
-          } else {
-            cells.push('""');
-          }
+        if (!lane) return;
+        const placement = getHeatPlacement(lane, info.startLane, info.sizes);
+        const m = meta.find(mm => mm.heatIndex === placement.heat);
+        if (m) {
+          row[m.col] = placement.heat > 1 ? `${lane} (Lane ${placement.laneInHeat})` : lane;
+          colCounts[m.col]++;
         }
       });
-      lines.push([q(club), q(`Crew ${crewLetter(n)}`), ...cells].join(','));
+      aoa.push(row);
+      rowClubs.push(club);
     }
   });
 
-  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = Object.assign(document.createElement('a'), {
-    href: url,
-    download: `ECRC-DrawSheet-${(crewCurrentRegattaName||crewCurrentRegattaId).replace(/[^a-zA-Z0-9]/g,'-')}-${crewCurrentYear}.csv`
-  });
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const totalsRow = new Array(totalCols).fill('');
+  totalsRow[0] = 'Totals';
+  for (let c = 1; c < totalCols; c++) totalsRow[c] = colCounts[c] || '';
+  aoa.push(totalsRow);
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges'] = merges;
+  ws['!cols'] = new Array(totalCols).fill({ wch: 13 });
+
+  const thinBorder = { style: 'thin', color: { rgb: '999999' } };
+  const allBorders  = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder };
+  const totalsRowIdx = aoa.length - 1;
+
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const ref = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+
+      if (R === 0) {
+        ws[ref].s = { font: { bold: true }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: allBorders };
+      } else if (R === 1) {
+        const hasLabel = !!ws[ref].v;
+        ws[ref].s = hasLabel
+          ? { font: { bold: true }, alignment: { horizontal: 'center' }, border: allBorders }
+          : { fill: { fgColor: { rgb: 'D9D9D9' } }, border: allBorders };
+      } else if (R === totalsRowIdx) {
+        ws[ref].s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '000000' } }, alignment: { horizontal: 'center' }, border: allBorders };
+      } else {
+        const club  = rowClubs[R - 2];
+        const color = getClubXlsxColor(club);
+        ws[ref].s = {
+          font: { bold: C === 0, color: { rgb: color.text } },
+          fill: { fgColor: { rgb: color.bg } },
+          alignment: { horizontal: C === 0 ? 'left' : 'center' },
+          border: allBorders,
+        };
+      }
+    }
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Draw Sheet');
+  XLSX.writeFile(wb, `ECRC-DrawSheet-${(crewCurrentRegattaName||crewCurrentRegattaId).replace(/[^a-zA-Z0-9]/g,'-')}-${crewCurrentYear}.xlsx`);
 }
 
 /* ─── Submit Table (matrix layout, same pivot as Overview) ─── */
