@@ -1674,6 +1674,16 @@ function saveCrewsData(c) {
   db.collection('settings').doc('crews').set({ data: c }).catch(e => console.warn('Crew save:', e));
 }
 
+// Converts a crew's 1-based position to a letter label (1->A, 2->B, ... 26->Z, 27->AA, ...)
+function crewLetter(n) {
+  let s = '';
+  while (n > 0) {
+    s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+
 // Generates a collision-safe crew ID. Multiple crews saved in the same
 // save action share the same Date.now() value, so a counter + UUID (when
 // available) is used instead of relying on a short random suffix alone.
@@ -1899,7 +1909,7 @@ function renderOverview() {
     return `<tr>
       <td class="ov-row-label" style="background:${bg};">
         <span>${escHtml(row.club)}</span>
-        <span class="ov-crew-num">Crew ${row.crewNum}</span>
+        <span class="ov-crew-num">Crew ${crewLetter(row.crewNum)}</span>
       </td>
       ${dataCells}
     </tr>`;
@@ -1987,7 +1997,7 @@ function downloadCrewsCSV() {
     });
     const maxN = Math.max(0, ...Object.values(catMap).map(a => a.length));
     for (let n = 1; n <= maxN; n++) {
-      const row = [q(club), q(`Crew ${n}`)];
+      const row = [q(club), q(`Crew ${crewLetter(n)}`)];
       usedCats.forEach(cat => {
         const e = catMap[cat]?.[n - 1];
         row.push(e ? q(e.rowers.filter(r=>r).join(', ') + (e.cox ? ` | Cox: ${e.cox}` : '')) : '""');
@@ -2342,7 +2352,7 @@ function renderDrawSheet() {
     return `<tr>
       <td class="draw-row-label" style="background:${bg};">
         <strong>${escHtml(row.club)}</strong>
-        <span class="ov-crew-num">Crew ${row.crewNum}</span>
+        <span class="ov-crew-num">Crew ${crewLetter(row.crewNum)}</span>
       </td>
       ${cells}
     </tr>`;
@@ -2455,7 +2465,7 @@ function downloadDrawSheetCSV() {
           }
         }
       });
-      lines.push([q(club), q(`Crew ${n}`), ...cells].join(','));
+      lines.push([q(club), q(`Crew ${crewLetter(n)}`), ...cells].join(','));
     }
   });
 
@@ -2589,7 +2599,7 @@ function renderSubmitTable() {
       bodyHtml += `<tr>
         <td class="ov-row-label" style="background:${bg};padding:6px 10px;">
           ${logoImg}<span>${escHtml(club)}</span>
-          <span class="ov-crew-num">Crew ${n}</span>
+          <span class="ov-crew-num">Crew ${crewLetter(n)}</span>
         </td>
         ${cells}
       </tr>`;
