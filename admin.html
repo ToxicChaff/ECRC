@@ -1668,6 +1668,18 @@ function saveCrewsData(c) {
   db.collection('settings').doc('crews').set({ data: c }).catch(e => console.warn('Crew save:', e));
 }
 
+// Generates a collision-safe crew ID. Multiple crews saved in the same
+// save action share the same Date.now() value, so a counter + UUID (when
+// available) is used instead of relying on a short random suffix alone.
+let __crewIdCounter = 0;
+function generateCrewId() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return 'crew_' + window.crypto.randomUUID();
+  }
+  __crewIdCounter++;
+  return 'crew' + Date.now() + '_' + __crewIdCounter + '_' + Math.random().toString(36).slice(2, 10);
+}
+
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -2517,7 +2529,7 @@ async function saveAllCrews() {
     if (!rowers.some(r => r) && !cox) return;
     if (!club || !cat) return;
     newEntries.push({
-      id: entryId || ('crew' + Date.now() + '_' + Math.random().toString(36).slice(2, 5)),
+      id: entryId || generateCrewId(),
       year: crewCurrentYear, regattaId: crewCurrentRegattaId,
       regattaName: crewCurrentRegattaName,
       club, category: cat, rowers, cox, submittedBy: currentUser?.email || ''
