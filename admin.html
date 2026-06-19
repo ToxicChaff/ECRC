@@ -1685,6 +1685,14 @@ const CLUB_XLSX_COLORS = {
 function getClubXlsxColor(club) {
   return CLUB_XLSX_COLORS[club] || { bg: 'FFFFFF', text: '000000' };
 }
+// Blends a hex color toward white. amount 0 = unchanged, 1 = white.
+function lightenHex(hex, amount) {
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  const blend = v => Math.round(v + (255 - v) * amount).toString(16).padStart(2, '0');
+  return (blend(r) + blend(g) + blend(b)).toUpperCase();
+}
 
 function getCrews() {
   try { return JSON.parse(localStorage.getItem('ecrc_admin_crews') || '[]'); } catch { return []; }
@@ -2547,10 +2555,11 @@ function downloadDrawSheetXLSX() {
       } else {
         const club  = rowClubs[R - 2];
         const color = getClubXlsxColor(club);
+        const isClubCol = C === 0;
         ws[ref].s = {
-          font: { bold: C === 0, color: { rgb: color.text } },
-          fill: { fgColor: { rgb: color.bg } },
-          alignment: { horizontal: C === 0 ? 'left' : 'center' },
+          font: { bold: isClubCol, color: { rgb: isClubCol ? color.text : '000000' } },
+          fill: { fgColor: { rgb: isClubCol ? color.bg : lightenHex(color.bg, 0.65) } },
+          alignment: { horizontal: isClubCol ? 'left' : 'center' },
           border: allBorders,
         };
       }
