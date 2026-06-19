@@ -2040,26 +2040,45 @@ function saveLaneStart(category, val) {
   renderDrawSheet();
 }
 
-function syncLaneDataToFirestore() {
-  const laneStarts = {};
-  const crewLocks  = {};
-  const categoryOrder = {};
-  const maxLanes = {};
+async function syncLaneDataToFirestore() {
+  const localLaneStarts = {};
+  const localCrewLocks  = {};
+  const localCatOrder   = {};
+  const localMaxLanes   = {};
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key) continue;
     if (key.startsWith('ecrc_lane_starts_'))
-      try { laneStarts[key.replace('ecrc_lane_starts_', '')] = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
+      try { localLaneStarts[key.replace('ecrc_lane_starts_', '')] = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
     if (key.startsWith('ecrc_crew_lock_'))
-      crewLocks[key.replace('ecrc_crew_lock_', '')] = localStorage.getItem(key) === '1';
+      localCrewLocks[key.replace('ecrc_crew_lock_', '')] = localStorage.getItem(key) === '1';
     if (key.startsWith('ecrc_cat_order_'))
-      try { categoryOrder[key.replace('ecrc_cat_order_', '')] = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+      try { localCatOrder[key.replace('ecrc_cat_order_', '')] = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
     if (key.startsWith('ecrc_max_lanes_'))
-      maxLanes[key.replace('ecrc_max_lanes_', '')] = parseInt(localStorage.getItem(key)) || 10;
+      localMaxLanes[key.replace('ecrc_max_lanes_', '')] = parseInt(localStorage.getItem(key)) || 10;
   }
-  db.collection('settings').doc('laneData').set({
-    lanes: getLaneData(), laneStarts, crewLocks, categoryOrder, maxLanes
-  }).catch(e => console.warn('LaneData save:', e));
+
+  try {
+    // Merge with the latest Firestore state instead of blindly overwriting, so a stale
+    // local cache (e.g. a different tab/session) can't silently erase someone else's change.
+    const snap   = await db.collection('settings').doc('laneData').get();
+    const remote = snap.exists ? snap.data() : {};
+
+    const mergedLaneStarts = { ...(remote.laneStarts || {}) };
+    Object.entries(localLaneStarts).forEach(([regattaKey, catMap]) => {
+      mergedLaneStarts[regattaKey] = { ...(mergedLaneStarts[regattaKey] || {}), ...catMap };
+    });
+
+    await db.collection('settings').doc('laneData').set({
+      lanes:         { ...(remote.lanes || {}), ...getLaneData() },
+      laneStarts:    mergedLaneStarts,
+      crewLocks:     { ...(remote.crewLocks || {}), ...localCrewLocks },
+      categoryOrder: { ...(remote.categoryOrder || {}), ...localCatOrder },
+      maxLanes:      { ...(remote.maxLanes || {}), ...localMaxLanes },
+    });
+  } catch (e) {
+    console.warn('LaneData save:', e);
+  }
 }
 
 /* ─── Max lanes / heat splitting ─── */
